@@ -429,45 +429,25 @@ class FortyGuardService:
         self,
     ) -> dict[str, Any]:
         """
-        Build a FortyGuard heatmap request for a small area of
-        central Phoenix.
+        Build the official FortyGuard documentation heatmap test.
 
-        FortyGuard expects:
-        - polygon_aoi as a GeoJSON FeatureCollection
-        - date_time as an object containing start_date, start_time,
-          and filter_type
-        - granularity as an integer in metres
+        This intentionally uses FortyGuard's documented New York City
+        example AOI and historical timestamp so we can verify the complete
+        live pipeline independently of the Phoenix/current-time request.
+
+        After the live integration is verified, this diagnostic payload
+        should be changed back to the product's Phoenix demo AOI.
         """
 
-        now = datetime.now(
-            timezone.utc
-        )
-
-        # Small polygon around central Phoenix.
         polygon_geometry = {
             "type": "Polygon",
             "coordinates": [
                 [
-                    [
-                        -112.0810,
-                        33.4420,
-                    ],
-                    [
-                        -112.0670,
-                        33.4420,
-                    ],
-                    [
-                        -112.0670,
-                        33.4550,
-                    ],
-                    [
-                        -112.0810,
-                        33.4550,
-                    ],
-                    [
-                        -112.0810,
-                        33.4420,
-                    ],
+                    [-74.0170, 40.7050],
+                    [-74.0030, 40.7050],
+                    [-74.0030, 40.7180],
+                    [-74.0170, 40.7180],
+                    [-74.0170, 40.7050],
                 ]
             ],
         }
@@ -486,8 +466,8 @@ class FortyGuardService:
         return {
             "polygon_aoi": polygon_aoi,
             "date_time": {
-                "start_date": now.strftime("%Y-%m-%d"),
-                "start_time": now.strftime("%H:%M"),
+                "start_date": "2024-07-15",
+                "start_time": "14:00",
                 "filter_type": 1,
             },
             "granularity": 100,
@@ -1405,4 +1385,3 @@ class FortyGuardService:
 
 
 fortyguard_service = FortyGuardService()
-# FortyGuard response parser diagnostic
