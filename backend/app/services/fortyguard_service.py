@@ -411,11 +411,14 @@ class FortyGuardService:
         self,
     ) -> dict[str, Any]:
         """
-        Phoenix demo polygon.
+        Build a FortyGuard heatmap request for a small area of
+        central Phoenix.
 
-        Using current UTC timestamp here keeps the adapter predictable.
-        Once the live API key is available, the exact FortyGuard
-        accepted time semantics can be verified against a real response.
+        FortyGuard expects:
+        - polygon_aoi as a GeoJSON FeatureCollection
+        - date_time as an object containing start_date, start_time,
+          and filter_type
+        - granularity as an integer in metres
         """
 
         now = datetime.now(
@@ -423,7 +426,7 @@ class FortyGuardService:
         )
 
         # Small polygon around central Phoenix.
-        polygon = {
+        polygon_geometry = {
             "type": "Polygon",
             "coordinates": [
                 [
@@ -451,9 +454,24 @@ class FortyGuardService:
             ],
         }
 
+        polygon_aoi = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {},
+                    "geometry": polygon_geometry,
+                }
+            ],
+        }
+
         return {
-            "geometry": polygon,
-            "date_time": now.isoformat(),
+            "polygon_aoi": polygon_aoi,
+            "date_time": {
+                "start_date": now.strftime("%Y-%m-%d"),
+                "start_time": now.strftime("%H:%M"),
+                "filter_type": 1,
+            },
             "granularity": 100,
             "analytic_type": "tcm",
         }
