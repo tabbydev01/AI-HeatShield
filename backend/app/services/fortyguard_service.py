@@ -290,6 +290,24 @@ class FortyGuardService:
                 activity_id=activity_id,
             )
 
+            # Temporary safe response diagnostic.
+            # No request headers or API key are logged.
+            try:
+                diagnostic_payload = json.dumps(
+                    completed_data,
+                    ensure_ascii=False,
+                    default=str,
+                )
+                print(
+                    "[AI HeatShield] FortyGuard completed response: "
+                    + diagnostic_payload[:16000]
+                )
+            except Exception as diagnostic_error:
+                print(
+                    "[AI HeatShield] Could not serialize FortyGuard "
+                    f"completed response: {diagnostic_error}"
+                )
+
             return self._normalize_live_response(
                 completed_data
             )
@@ -892,89 +910,203 @@ class FortyGuardService:
         raw: dict[str, Any],
     ) -> dict[str, Any]:
         """
-        Try common response wrappers without assuming one exact
-        FortyGuard response layout.
+        Recursively search common FortyGuard response wrappers and
+        return the dictionary that actually contains heatmap data.
+
+        A completed FortyGuard status response can be shaped like
+        data -> result -> map_data, so a one-level unwrap is not
+        sufficient.
         """
 
-        current: Any = raw
-
-        for key in [
-            "result",
-            "data",
-            "output",
-            "response",
-        ]:
-            if (
-                isinstance(
-                    current,
-                    dict,
-                )
-                and key
-                in current
-                and isinstance(
-                    current[key],
-                    dict,
-                )
-            ):
-                candidate = current[
-                    key
-                ]
-
-                if (
-                    self._extract_map_data(
-                        candidate
-                    )
-                ):
-                    return candidate
-
-        return (
-            current
-            if isinstance(
-                current,
-                dict,
-            )
-            else raw
+        found = self._find_heatmap_container(
+            raw
         )
+
+        if found is not None:
+            return found
+
+        return raw
+
+    def _find_heatmap_container(
+        self,
+        value: Any,
+    ) -> dict[str, Any] | None:
+        """
+        Find the first nested dictionary that directly contains
+        heatmap data.
+        """
+
+        if isinstance(
+            value,
+            dict,
+        ):
+            direct_keys = {
+                "map_data",
+                "mapData",
+                "tiles",
+                "features",
+            }
+
+            if any(
+                key in value
+                for key in direct_keys
+            ):
+                return value
+
+            for key in [
+                "data",
+                "result",
+                "output",
+                "response",
+            ]:
+                if key in value:
+                    found = self._find_heatmap_container(
+                        value[key]
+                    )
+
+                    if found is not None:
+                        return found
+
+            for child in value.values():
+                if isinstance(
+                    child,
+                    (
+                        dict,
+                        list,
+                    ),
+                ):
+                    found = self._find_heatmap_container(
+                        child
+                    )
+
+                    if found is not None:
+                        return found
+
+        elif isinstance(
+            value,
+            list,
+        ):
+            for child in value:
+                if isinstance(
+                    child,
+                    (
+                        dict,
+                        list,
+                    ),
+                ):
+                    found = self._find_heatmap_container(
+                        child
+                    )
+
+                    if found is not None:
+                        return found
+
+        return None
 
     def _extract_map_data(
         self,
         payload: dict[str, Any],
     ) -> list[Any]:
-        candidates = [
-            payload.get(
-                "map_data"
-            ),
-            payload.get(
-                "mapData"
-            ),
-            payload.get(
-                "tiles"
-            ),
-            payload.get(
-                "features"
-            ),
-        ]
+        """
+        Extract map data from this dictionary or nested FortyGuard
+        result wrappers.
+        """
 
-        for candidate in candidates:
+        for key in [
+            "map_data",
+            "mapData",
+            "tiles",
+        ]:
+            candidate = payload.get(
+                key
+            )
+
             if isinstance(
                 candidate,
                 list,
             ):
                 return candidate
 
-        data = payload.get(
-            "data"
+            if isinstance(
+                candidate,
+                dict,
+            ):
+                nested_list = self._first_list_in_dict(
+                    candidate
+                )
+
+                if nested_list:
+                    return nested_list
+
+        features = payload.get(
+            "features"
         )
 
         if isinstance(
-            data,
-            dict,
+            features,
+            list,
         ):
-            return (
-                self._extract_map_data(
-                    data
-                )
+            return features
+
+        for key in [
+            "data",
+            "result",
+            "output",
+            "response",
+        ]:
+            nested = payload.get(
+                key
             )
+
+            if isinstance(
+                nested,
+                dict,
+            ):
+                result = self._extract_map_data(
+                    nested
+                )
+
+                if result:
+                    return result
+
+        for nested in payload.values():
+            if isinstance(
+                nested,
+                dict,
+            ):
+                result = self._extract_map_data(
+                    nested
+                )
+
+                if result:
+                    return result
+
+        return []
+
+    def _first_list_in_dict(
+        self,
+        value: dict[str, Any],
+    ) -> list[Any]:
+        """
+        Return the first expected list found in a wrapper dictionary.
+        """
+
+        for key in [
+            "data",
+            "values",
+            "items",
+            "features",
+            "tiles",
+        ]:
+            candidate = value.get(
+                key
+            )
+
+            if isinstance(
+                candidate,
+                list,
+            ):
+                return candidate
 
         return []
 
@@ -982,27 +1114,47 @@ class FortyGuardService:
         self,
         payload: dict[str, Any],
     ) -> dict[str, Any]:
-        candidates = [
-            payload.get(
-                "stats_data"
-            ),
-            payload.get(
-                "statsData"
-            ),
-            payload.get(
-                "statistics"
-            ),
-            payload.get(
-                "stats"
-            ),
-        ]
+        """
+        Extract statistics from the result container or nested
+        FortyGuard wrappers.
+        """
 
-        for candidate in candidates:
+        for key in [
+            "stats_data",
+            "statsData",
+            "statistics",
+            "stats",
+        ]:
+            candidate = payload.get(
+                key
+            )
+
             if isinstance(
                 candidate,
                 dict,
             ):
                 return candidate
+
+        for key in [
+            "data",
+            "result",
+            "output",
+            "response",
+        ]:
+            nested = payload.get(
+                key
+            )
+
+            if isinstance(
+                nested,
+                dict,
+            ):
+                result = self._extract_stats_data(
+                    nested
+                )
+
+                if result:
+                    return result
 
         return {}
 
@@ -1253,3 +1405,4 @@ class FortyGuardService:
 
 
 fortyguard_service = FortyGuardService()
+# FortyGuard response parser diagnostic
