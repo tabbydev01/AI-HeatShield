@@ -1,0 +1,2115 @@
+{
+  "location": {
+    "city": "Phoenix",
+    "state": "Arizona",
+    "country": "USA"
+  },
+  "generated_at": "2026-08-28T13:00:00Z",
+  "statistics": {
+    "temperature_min": 36.7,
+    "temperature_max": 42.8,
+    "temperature_mean": 39.0
+  },
+  "tiles": [
+    {
+      "id": "tile_001",
+      "latitude": 33.4432,
+      "longitude": -112.0803,
+      "temperature": 38.7,
+      "humidity": 36.8,
+      "heat_index": 39.5,
+      "wet_bulb": 25.7,
+      "solar_radiation": 670.9
+    },
+    {
+      "id": "tile_002",
+      "latitude": 33.4432,
+      "longitude": -112.0794,
+      "temperature": 38.1,
+      "humidity": 40.6,
+      "heat_index": 38.8,
+      "wet_bulb": 25.9,
+      "solar_radiation": 694.3
+    },
+    {
+      "id": "tile_003",
+      "latitude": 33.4432,
+      "longitude": -112.0785,
+      "temperature": 38.2,
+      "humidity": 37.7,
+      "heat_index": 38.9,
+      "wet_bulb": 25.8,
+      "solar_radiation": 669.4
+    },
+    {
+      "id": "tile_004",
+      "latitude": 33.4432,
+      "longitude": -112.0776,
+      "temperature": 37.0,
+      "humidity": 38.7,
+      "heat_index": 37.3,
+      "wet_bulb": 25.7,
+      "solar_radiation": 668.3
+    },
+    {
+      "id": "tile_005",
+      "latitude": 33.4432,
+      "longitude": -112.0767,
+      "temperature": 36.7,
+      "humidity": 38.8,
+      "heat_index": 37.0,
+      "wet_bulb": 25.7,
+      "solar_radiation": 675.5
+    },
+    {
+      "id": "tile_006",
+      "latitude": 33.4432,
+      "longitude": -112.0758,
+      "temperature": 37.2,
+      "humidity": 38.7,
+      "heat_index": 37.5,
+      "wet_bulb": 25.7,
+      "solar_radiation": 674.2
+    },
+    {
+      "id": "tile_007",
+      "latitude": 33.4432,
+      "longitude": -112.0749,
+      "temperature": 37.7,
+      "humidity": 37.3,
+      "heat_index": 38.2,
+      "wet_bulb": 25.7,
+      "solar_radiation": 696.2
+    },
+    {
+      "id": "tile_008",
+      "latitude": 33.4432,
+      "longitude": -112.074,
+      "temperature": 38.1,
+      "humidity": 38.6,
+      "heat_index": 38.8,
+      "wet_bulb": 25.8,
+      "solar_radiation": 657.8
+    },
+    {
+      "id": "tile_009",
+      "latitude": 33.4432,
+      "longitude": -112.0731,
+      "temperature": 38.7,
+      "humidity": 38.4,
+      "heat_index": 39.6,
+      "wet_bulb": 25.9,
+      "solar_radiation": 658.1
+    },
+    {
+      "id": "tile_010",
+      "latitude": 33.4432,
+      "longitude": -112.0722,
+      "temperature": 38.2,
+      "humidity": 40.8,
+      "heat_index": 39.0,
+      "wet_bulb": 26.0,
+      "solar_radiation": 696.2
+    },
+    {
+      "id": "tile_011",
+      "latitude": 33.4432,
+      "longitude": -112.0713,
+      "temperature": 38.9,
+      "humidity": 40.2,
+      "heat_index": 39.9,
+      "wet_bulb": 26.0,
+      "solar_radiation": 692.3
+    },
+    {
+      "id": "tile_012",
+      "latitude": 33.4432,
+      "longitude": -112.0704,
+      "temperature": 38.9,
+      "humidity": 38.4,
+      "heat_index": 39.9,
+      "wet_bulb": 25.9,
+      "solar_radiation": 693.6
+    },
+    {
+      "id": "tile_013",
+      "latitude": 33.4432,
+      "longitude": -112.0695,
+      "temperature": 38.5,
+      "humidity": 39.6,
+      "heat_index": 39.4,
+      "wet_bulb": 25.9,
+      "solar_radiation": 715.3
+    },
+    {
+      "id": "tile_014",
+      "latitude": 33.4432,
+      "longitude": -112.0686,
+      "temperature": 38.0,
+      "humidity": 40.0,
+      "heat_index": 38.7,
+      "wet_bulb": 25.9,
+      "solar_radiation": 658.2
+    },
+    {
+      "id": "tile_015",
+      "latitude": 33.4432,
+      "longitude": -112.0677,
+      "temperature": 37.5,
+      "humidity": 37.9,
+      "heat_index": 38.0,
+      "wet_bulb": 25.7,
+      "solar_radiation": 660.6
+    },
+    {
+      "id": "tile_016",
+      "latitude": 33.444,
+      "longitude": -112.0803,
+      "temperature": 38.6,
+      "humidity": 37.3,
+      "heat_index": 39.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 668.1
+    },
+    {
+      "id": "tile_017",
+      "latitude": 33.444,
+      "longitude": -112.0794,
+      "temperature": 38.6,
+      "humidity": 39.1,
+      "heat_index": 39.4,
+      "wet_bulb": 25.9,
+      "solar_radiation": 665.8
+    },
+    {
+      "id": "tile_018",
+      "latitude": 33.444,
+      "longitude": -112.0785,
+      "temperature": 37.6,
+      "humidity": 39.3,
+      "heat_index": 38.1,
+      "wet_bulb": 25.8,
+      "solar_radiation": 692.2
+    },
+    {
+      "id": "tile_019",
+      "latitude": 33.444,
+      "longitude": -112.0776,
+      "temperature": 37.3,
+      "humidity": 41.7,
+      "heat_index": 37.8,
+      "wet_bulb": 25.9,
+      "solar_radiation": 625.8
+    },
+    {
+      "id": "tile_020",
+      "latitude": 33.444,
+      "longitude": -112.0767,
+      "temperature": 37.2,
+      "humidity": 39.4,
+      "heat_index": 37.6,
+      "wet_bulb": 25.8,
+      "solar_radiation": 641.5
+    },
+    {
+      "id": "tile_021",
+      "latitude": 33.444,
+      "longitude": -112.0758,
+      "temperature": 37.8,
+      "humidity": 40.9,
+      "heat_index": 38.5,
+      "wet_bulb": 25.9,
+      "solar_radiation": 672.0
+    },
+    {
+      "id": "tile_022",
+      "latitude": 33.444,
+      "longitude": -112.0749,
+      "temperature": 38.2,
+      "humidity": 40.9,
+      "heat_index": 39.1,
+      "wet_bulb": 26.0,
+      "solar_radiation": 708.1
+    },
+    {
+      "id": "tile_023",
+      "latitude": 33.444,
+      "longitude": -112.074,
+      "temperature": 38.5,
+      "humidity": 36.1,
+      "heat_index": 39.3,
+      "wet_bulb": 25.7,
+      "solar_radiation": 691.8
+    },
+    {
+      "id": "tile_024",
+      "latitude": 33.444,
+      "longitude": -112.0731,
+      "temperature": 39.0,
+      "humidity": 36.6,
+      "heat_index": 40.0,
+      "wet_bulb": 25.8,
+      "solar_radiation": 741.8
+    },
+    {
+      "id": "tile_025",
+      "latitude": 33.444,
+      "longitude": -112.0722,
+      "temperature": 39.7,
+      "humidity": 37.3,
+      "heat_index": 40.9,
+      "wet_bulb": 25.9,
+      "solar_radiation": 718.0
+    },
+    {
+      "id": "tile_026",
+      "latitude": 33.444,
+      "longitude": -112.0713,
+      "temperature": 39.0,
+      "humidity": 40.8,
+      "heat_index": 40.1,
+      "wet_bulb": 26.1,
+      "solar_radiation": 693.2
+    },
+    {
+      "id": "tile_027",
+      "latitude": 33.444,
+      "longitude": -112.0704,
+      "temperature": 38.6,
+      "humidity": 37.7,
+      "heat_index": 39.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 694.2
+    },
+    {
+      "id": "tile_028",
+      "latitude": 33.444,
+      "longitude": -112.0695,
+      "temperature": 38.3,
+      "humidity": 39.4,
+      "heat_index": 39.1,
+      "wet_bulb": 25.9,
+      "solar_radiation": 717.8
+    },
+    {
+      "id": "tile_029",
+      "latitude": 33.444,
+      "longitude": -112.0686,
+      "temperature": 38.2,
+      "humidity": 37.6,
+      "heat_index": 38.9,
+      "wet_bulb": 25.7,
+      "solar_radiation": 724.8
+    },
+    {
+      "id": "tile_030",
+      "latitude": 33.444,
+      "longitude": -112.0677,
+      "temperature": 38.1,
+      "humidity": 37.0,
+      "heat_index": 38.7,
+      "wet_bulb": 25.7,
+      "solar_radiation": 658.3
+    },
+    {
+      "id": "tile_031",
+      "latitude": 33.4448,
+      "longitude": -112.0803,
+      "temperature": 38.5,
+      "humidity": 40.1,
+      "heat_index": 39.4,
+      "wet_bulb": 26.0,
+      "solar_radiation": 701.2
+    },
+    {
+      "id": "tile_032",
+      "latitude": 33.4448,
+      "longitude": -112.0794,
+      "temperature": 38.3,
+      "humidity": 38.0,
+      "heat_index": 39.0,
+      "wet_bulb": 25.8,
+      "solar_radiation": 659.7
+    },
+    {
+      "id": "tile_033",
+      "latitude": 33.4448,
+      "longitude": -112.0785,
+      "temperature": 38.0,
+      "humidity": 41.3,
+      "heat_index": 38.8,
+      "wet_bulb": 26.0,
+      "solar_radiation": 681.8
+    },
+    {
+      "id": "tile_034",
+      "latitude": 33.4448,
+      "longitude": -112.0776,
+      "temperature": 37.5,
+      "humidity": 38.8,
+      "heat_index": 38.1,
+      "wet_bulb": 25.8,
+      "solar_radiation": 663.3
+    },
+    {
+      "id": "tile_035",
+      "latitude": 33.4448,
+      "longitude": -112.0767,
+      "temperature": 37.4,
+      "humidity": 41.0,
+      "heat_index": 38.0,
+      "wet_bulb": 25.9,
+      "solar_radiation": 642.5
+    },
+    {
+      "id": "tile_036",
+      "latitude": 33.4448,
+      "longitude": -112.0758,
+      "temperature": 37.9,
+      "humidity": 37.8,
+      "heat_index": 38.5,
+      "wet_bulb": 25.7,
+      "solar_radiation": 677.0
+    },
+    {
+      "id": "tile_037",
+      "latitude": 33.4448,
+      "longitude": -112.0749,
+      "temperature": 38.7,
+      "humidity": 40.6,
+      "heat_index": 39.6,
+      "wet_bulb": 26.0,
+      "solar_radiation": 736.2
+    },
+    {
+      "id": "tile_038",
+      "latitude": 33.4448,
+      "longitude": -112.074,
+      "temperature": 39.4,
+      "humidity": 37.2,
+      "heat_index": 40.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 709.9
+    },
+    {
+      "id": "tile_039",
+      "latitude": 33.4448,
+      "longitude": -112.0731,
+      "temperature": 40.5,
+      "humidity": 38.5,
+      "heat_index": 42.1,
+      "wet_bulb": 26.1,
+      "solar_radiation": 727.8
+    },
+    {
+      "id": "tile_040",
+      "latitude": 33.4448,
+      "longitude": -112.0722,
+      "temperature": 40.4,
+      "humidity": 37.4,
+      "heat_index": 41.9,
+      "wet_bulb": 26.0,
+      "solar_radiation": 714.2
+    },
+    {
+      "id": "tile_041",
+      "latitude": 33.4448,
+      "longitude": -112.0713,
+      "temperature": 40.2,
+      "humidity": 37.6,
+      "heat_index": 41.6,
+      "wet_bulb": 26.0,
+      "solar_radiation": 745.4
+    },
+    {
+      "id": "tile_042",
+      "latitude": 33.4448,
+      "longitude": -112.0704,
+      "temperature": 39.4,
+      "humidity": 35.7,
+      "heat_index": 40.5,
+      "wet_bulb": 25.7,
+      "solar_radiation": 695.3
+    },
+    {
+      "id": "tile_043",
+      "latitude": 33.4448,
+      "longitude": -112.0695,
+      "temperature": 38.2,
+      "humidity": 41.2,
+      "heat_index": 39.1,
+      "wet_bulb": 26.0,
+      "solar_radiation": 716.4
+    },
+    {
+      "id": "tile_044",
+      "latitude": 33.4448,
+      "longitude": -112.0686,
+      "temperature": 38.7,
+      "humidity": 38.0,
+      "heat_index": 39.6,
+      "wet_bulb": 25.8,
+      "solar_radiation": 659.0
+    },
+    {
+      "id": "tile_045",
+      "latitude": 33.4448,
+      "longitude": -112.0677,
+      "temperature": 38.6,
+      "humidity": 41.2,
+      "heat_index": 39.5,
+      "wet_bulb": 26.0,
+      "solar_radiation": 661.0
+    },
+    {
+      "id": "tile_046",
+      "latitude": 33.4456,
+      "longitude": -112.0803,
+      "temperature": 38.6,
+      "humidity": 37.4,
+      "heat_index": 39.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 697.8
+    },
+    {
+      "id": "tile_047",
+      "latitude": 33.4456,
+      "longitude": -112.0794,
+      "temperature": 38.4,
+      "humidity": 38.4,
+      "heat_index": 39.2,
+      "wet_bulb": 25.8,
+      "solar_radiation": 663.3
+    },
+    {
+      "id": "tile_048",
+      "latitude": 33.4456,
+      "longitude": -112.0785,
+      "temperature": 37.8,
+      "humidity": 39.4,
+      "heat_index": 38.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 687.7
+    },
+    {
+      "id": "tile_049",
+      "latitude": 33.4456,
+      "longitude": -112.0776,
+      "temperature": 37.4,
+      "humidity": 39.1,
+      "heat_index": 37.9,
+      "wet_bulb": 25.8,
+      "solar_radiation": 667.9
+    },
+    {
+      "id": "tile_050",
+      "latitude": 33.4456,
+      "longitude": -112.0767,
+      "temperature": 37.8,
+      "humidity": 38.5,
+      "heat_index": 38.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 664.9
+    },
+    {
+      "id": "tile_051",
+      "latitude": 33.4456,
+      "longitude": -112.0758,
+      "temperature": 38.7,
+      "humidity": 39.5,
+      "heat_index": 39.6,
+      "wet_bulb": 25.9,
+      "solar_radiation": 700.6
+    },
+    {
+      "id": "tile_052",
+      "latitude": 33.4456,
+      "longitude": -112.0749,
+      "temperature": 39.3,
+      "humidity": 35.2,
+      "heat_index": 40.2,
+      "wet_bulb": 25.7,
+      "solar_radiation": 718.8
+    },
+    {
+      "id": "tile_053",
+      "latitude": 33.4456,
+      "longitude": -112.074,
+      "temperature": 40.1,
+      "humidity": 36.2,
+      "heat_index": 41.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 745.0
+    },
+    {
+      "id": "tile_054",
+      "latitude": 33.4456,
+      "longitude": -112.0731,
+      "temperature": 40.6,
+      "humidity": 33.1,
+      "heat_index": 41.9,
+      "wet_bulb": 25.7,
+      "solar_radiation": 783.3
+    },
+    {
+      "id": "tile_055",
+      "latitude": 33.4456,
+      "longitude": -112.0722,
+      "temperature": 40.7,
+      "humidity": 37.5,
+      "heat_index": 42.2,
+      "wet_bulb": 26.0,
+      "solar_radiation": 794.3
+    },
+    {
+      "id": "tile_056",
+      "latitude": 33.4456,
+      "longitude": -112.0713,
+      "temperature": 40.2,
+      "humidity": 34.8,
+      "heat_index": 41.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 765.6
+    },
+    {
+      "id": "tile_057",
+      "latitude": 33.4456,
+      "longitude": -112.0704,
+      "temperature": 39.6,
+      "humidity": 35.2,
+      "heat_index": 40.7,
+      "wet_bulb": 25.7,
+      "solar_radiation": 762.9
+    },
+    {
+      "id": "tile_058",
+      "latitude": 33.4456,
+      "longitude": -112.0695,
+      "temperature": 39.0,
+      "humidity": 38.1,
+      "heat_index": 40.0,
+      "wet_bulb": 25.9,
+      "solar_radiation": 727.8
+    },
+    {
+      "id": "tile_059",
+      "latitude": 33.4456,
+      "longitude": -112.0686,
+      "temperature": 38.5,
+      "humidity": 37.5,
+      "heat_index": 39.3,
+      "wet_bulb": 25.8,
+      "solar_radiation": 661.5
+    },
+    {
+      "id": "tile_060",
+      "latitude": 33.4456,
+      "longitude": -112.0677,
+      "temperature": 38.0,
+      "humidity": 38.6,
+      "heat_index": 38.7,
+      "wet_bulb": 25.8,
+      "solar_radiation": 687.5
+    },
+    {
+      "id": "tile_061",
+      "latitude": 33.4464,
+      "longitude": -112.0803,
+      "temperature": 38.6,
+      "humidity": 40.3,
+      "heat_index": 39.5,
+      "wet_bulb": 26.0,
+      "solar_radiation": 714.7
+    },
+    {
+      "id": "tile_062",
+      "latitude": 33.4464,
+      "longitude": -112.0794,
+      "temperature": 37.7,
+      "humidity": 39.3,
+      "heat_index": 38.3,
+      "wet_bulb": 25.8,
+      "solar_radiation": 664.7
+    },
+    {
+      "id": "tile_063",
+      "latitude": 33.4464,
+      "longitude": -112.0785,
+      "temperature": 38.4,
+      "humidity": 38.2,
+      "heat_index": 39.2,
+      "wet_bulb": 25.8,
+      "solar_radiation": 664.1
+    },
+    {
+      "id": "tile_064",
+      "latitude": 33.4464,
+      "longitude": -112.0776,
+      "temperature": 37.9,
+      "humidity": 38.8,
+      "heat_index": 38.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 679.2
+    },
+    {
+      "id": "tile_065",
+      "latitude": 33.4464,
+      "longitude": -112.0767,
+      "temperature": 37.9,
+      "humidity": 40.5,
+      "heat_index": 38.6,
+      "wet_bulb": 25.9,
+      "solar_radiation": 708.3
+    },
+    {
+      "id": "tile_066",
+      "latitude": 33.4464,
+      "longitude": -112.0758,
+      "temperature": 39.2,
+      "humidity": 37.2,
+      "heat_index": 40.2,
+      "wet_bulb": 25.8,
+      "solar_radiation": 710.7
+    },
+    {
+      "id": "tile_067",
+      "latitude": 33.4464,
+      "longitude": -112.0749,
+      "temperature": 40.4,
+      "humidity": 37.0,
+      "heat_index": 41.8,
+      "wet_bulb": 25.9,
+      "solar_radiation": 809.2
+    },
+    {
+      "id": "tile_068",
+      "latitude": 33.4464,
+      "longitude": -112.074,
+      "temperature": 41.2,
+      "humidity": 35.8,
+      "heat_index": 42.9,
+      "wet_bulb": 25.9,
+      "solar_radiation": 777.8
+    },
+    {
+      "id": "tile_069",
+      "latitude": 33.4464,
+      "longitude": -112.0731,
+      "temperature": 41.3,
+      "humidity": 32.3,
+      "heat_index": 42.9,
+      "wet_bulb": 25.7,
+      "solar_radiation": 800.9
+    },
+    {
+      "id": "tile_070",
+      "latitude": 33.4464,
+      "longitude": -112.0722,
+      "temperature": 40.9,
+      "humidity": 33.5,
+      "heat_index": 42.4,
+      "wet_bulb": 25.7,
+      "solar_radiation": 832.0
+    },
+    {
+      "id": "tile_071",
+      "latitude": 33.4464,
+      "longitude": -112.0713,
+      "temperature": 40.6,
+      "humidity": 36.4,
+      "heat_index": 42.1,
+      "wet_bulb": 25.9,
+      "solar_radiation": 774.8
+    },
+    {
+      "id": "tile_072",
+      "latitude": 33.4464,
+      "longitude": -112.0704,
+      "temperature": 40.0,
+      "humidity": 38.4,
+      "heat_index": 41.3,
+      "wet_bulb": 26.0,
+      "solar_radiation": 787.5
+    },
+    {
+      "id": "tile_073",
+      "latitude": 33.4464,
+      "longitude": -112.0695,
+      "temperature": 39.1,
+      "humidity": 38.5,
+      "heat_index": 40.2,
+      "wet_bulb": 25.9,
+      "solar_radiation": 701.2
+    },
+    {
+      "id": "tile_074",
+      "latitude": 33.4464,
+      "longitude": -112.0686,
+      "temperature": 37.9,
+      "humidity": 41.0,
+      "heat_index": 38.6,
+      "wet_bulb": 26.0,
+      "solar_radiation": 702.4
+    },
+    {
+      "id": "tile_075",
+      "latitude": 33.4464,
+      "longitude": -112.0677,
+      "temperature": 37.8,
+      "humidity": 40.3,
+      "heat_index": 38.4,
+      "wet_bulb": 25.9,
+      "solar_radiation": 658.3
+    },
+    {
+      "id": "tile_076",
+      "latitude": 33.4472,
+      "longitude": -112.0803,
+      "temperature": 38.2,
+      "humidity": 39.3,
+      "heat_index": 39.0,
+      "wet_bulb": 25.9,
+      "solar_radiation": 708.4
+    },
+    {
+      "id": "tile_077",
+      "latitude": 33.4472,
+      "longitude": -112.0794,
+      "temperature": 38.0,
+      "humidity": 41.2,
+      "heat_index": 38.7,
+      "wet_bulb": 26.0,
+      "solar_radiation": 665.0
+    },
+    {
+      "id": "tile_078",
+      "latitude": 33.4472,
+      "longitude": -112.0785,
+      "temperature": 38.2,
+      "humidity": 38.6,
+      "heat_index": 38.9,
+      "wet_bulb": 25.8,
+      "solar_radiation": 724.5
+    },
+    {
+      "id": "tile_079",
+      "latitude": 33.4472,
+      "longitude": -112.0776,
+      "temperature": 38.3,
+      "humidity": 35.5,
+      "heat_index": 39.0,
+      "wet_bulb": 25.6,
+      "solar_radiation": 757.0
+    },
+    {
+      "id": "tile_080",
+      "latitude": 33.4472,
+      "longitude": -112.0767,
+      "temperature": 38.7,
+      "humidity": 36.9,
+      "heat_index": 39.6,
+      "wet_bulb": 25.8,
+      "solar_radiation": 761.8
+    },
+    {
+      "id": "tile_081",
+      "latitude": 33.4472,
+      "longitude": -112.0758,
+      "temperature": 39.7,
+      "humidity": 35.3,
+      "heat_index": 40.8,
+      "wet_bulb": 25.7,
+      "solar_radiation": 787.5
+    },
+    {
+      "id": "tile_082",
+      "latitude": 33.4472,
+      "longitude": -112.0749,
+      "temperature": 41.1,
+      "humidity": 31.8,
+      "heat_index": 42.7,
+      "wet_bulb": 25.6,
+      "solar_radiation": 835.3
+    },
+    {
+      "id": "tile_083",
+      "latitude": 33.4472,
+      "longitude": -112.074,
+      "temperature": 41.4,
+      "humidity": 31.7,
+      "heat_index": 43.0,
+      "wet_bulb": 25.7,
+      "solar_radiation": 854.0
+    },
+    {
+      "id": "tile_084",
+      "latitude": 33.4472,
+      "longitude": -112.0731,
+      "temperature": 41.7,
+      "humidity": 31.3,
+      "heat_index": 43.4,
+      "wet_bulb": 25.7,
+      "solar_radiation": 858.1
+    },
+    {
+      "id": "tile_085",
+      "latitude": 33.4472,
+      "longitude": -112.0722,
+      "temperature": 41.2,
+      "humidity": 32.8,
+      "heat_index": 42.8,
+      "wet_bulb": 25.7,
+      "solar_radiation": 856.6
+    },
+    {
+      "id": "tile_086",
+      "latitude": 33.4472,
+      "longitude": -112.0713,
+      "temperature": 41.4,
+      "humidity": 32.1,
+      "heat_index": 43.0,
+      "wet_bulb": 25.7,
+      "solar_radiation": 774.9
+    },
+    {
+      "id": "tile_087",
+      "latitude": 33.4472,
+      "longitude": -112.0704,
+      "temperature": 39.8,
+      "humidity": 37.8,
+      "heat_index": 41.1,
+      "wet_bulb": 25.9,
+      "solar_radiation": 792.3
+    },
+    {
+      "id": "tile_088",
+      "latitude": 33.4472,
+      "longitude": -112.0695,
+      "temperature": 39.4,
+      "humidity": 36.3,
+      "heat_index": 40.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 711.9
+    },
+    {
+      "id": "tile_089",
+      "latitude": 33.4472,
+      "longitude": -112.0686,
+      "temperature": 38.3,
+      "humidity": 39.3,
+      "heat_index": 39.1,
+      "wet_bulb": 25.9,
+      "solar_radiation": 713.9
+    },
+    {
+      "id": "tile_090",
+      "latitude": 33.4472,
+      "longitude": -112.0677,
+      "temperature": 37.8,
+      "humidity": 39.9,
+      "heat_index": 38.4,
+      "wet_bulb": 25.9,
+      "solar_radiation": 653.4
+    },
+    {
+      "id": "tile_091",
+      "latitude": 33.448,
+      "longitude": -112.0803,
+      "temperature": 38.4,
+      "humidity": 38.2,
+      "heat_index": 39.2,
+      "wet_bulb": 25.8,
+      "solar_radiation": 698.1
+    },
+    {
+      "id": "tile_092",
+      "latitude": 33.448,
+      "longitude": -112.0794,
+      "temperature": 38.9,
+      "humidity": 36.4,
+      "heat_index": 39.8,
+      "wet_bulb": 25.7,
+      "solar_radiation": 680.6
+    },
+    {
+      "id": "tile_093",
+      "latitude": 33.448,
+      "longitude": -112.0785,
+      "temperature": 38.6,
+      "humidity": 37.4,
+      "heat_index": 39.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 716.6
+    },
+    {
+      "id": "tile_094",
+      "latitude": 33.448,
+      "longitude": -112.0776,
+      "temperature": 39.3,
+      "humidity": 37.1,
+      "heat_index": 40.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 737.0
+    },
+    {
+      "id": "tile_095",
+      "latitude": 33.448,
+      "longitude": -112.0767,
+      "temperature": 39.9,
+      "humidity": 33.6,
+      "heat_index": 41.0,
+      "wet_bulb": 25.6,
+      "solar_radiation": 785.8
+    },
+    {
+      "id": "tile_096",
+      "latitude": 33.448,
+      "longitude": -112.0758,
+      "temperature": 40.9,
+      "humidity": 34.9,
+      "heat_index": 42.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 792.2
+    },
+    {
+      "id": "tile_097",
+      "latitude": 33.448,
+      "longitude": -112.0749,
+      "temperature": 41.6,
+      "humidity": 30.4,
+      "heat_index": 43.2,
+      "wet_bulb": 25.6,
+      "solar_radiation": 822.4
+    },
+    {
+      "id": "tile_098",
+      "latitude": 33.448,
+      "longitude": -112.074,
+      "temperature": 42.8,
+      "humidity": 31.0,
+      "heat_index": 44.8,
+      "wet_bulb": 25.7,
+      "solar_radiation": 865.4
+    },
+    {
+      "id": "tile_099",
+      "latitude": 33.448,
+      "longitude": -112.0731,
+      "temperature": 42.6,
+      "humidity": 31.4,
+      "heat_index": 44.6,
+      "wet_bulb": 25.8,
+      "solar_radiation": 859.8
+    },
+    {
+      "id": "tile_100",
+      "latitude": 33.448,
+      "longitude": -112.0722,
+      "temperature": 41.3,
+      "humidity": 30.4,
+      "heat_index": 42.9,
+      "wet_bulb": 25.6,
+      "solar_radiation": 860.4
+    },
+    {
+      "id": "tile_101",
+      "latitude": 33.448,
+      "longitude": -112.0713,
+      "temperature": 41.3,
+      "humidity": 34.3,
+      "heat_index": 43.0,
+      "wet_bulb": 25.8,
+      "solar_radiation": 823.3
+    },
+    {
+      "id": "tile_102",
+      "latitude": 33.448,
+      "longitude": -112.0704,
+      "temperature": 40.0,
+      "humidity": 33.8,
+      "heat_index": 41.2,
+      "wet_bulb": 25.7,
+      "solar_radiation": 740.9
+    },
+    {
+      "id": "tile_103",
+      "latitude": 33.448,
+      "longitude": -112.0695,
+      "temperature": 38.7,
+      "humidity": 39.0,
+      "heat_index": 39.7,
+      "wet_bulb": 25.9,
+      "solar_radiation": 757.0
+    },
+    {
+      "id": "tile_104",
+      "latitude": 33.448,
+      "longitude": -112.0686,
+      "temperature": 38.2,
+      "humidity": 40.3,
+      "heat_index": 39.0,
+      "wet_bulb": 25.9,
+      "solar_radiation": 686.8
+    },
+    {
+      "id": "tile_105",
+      "latitude": 33.448,
+      "longitude": -112.0677,
+      "temperature": 37.0,
+      "humidity": 37.3,
+      "heat_index": 37.2,
+      "wet_bulb": 25.6,
+      "solar_radiation": 704.4
+    },
+    {
+      "id": "tile_106",
+      "latitude": 33.4488,
+      "longitude": -112.0803,
+      "temperature": 38.7,
+      "humidity": 38.6,
+      "heat_index": 39.6,
+      "wet_bulb": 25.9,
+      "solar_radiation": 697.0
+    },
+    {
+      "id": "tile_107",
+      "latitude": 33.4488,
+      "longitude": -112.0794,
+      "temperature": 38.5,
+      "humidity": 40.2,
+      "heat_index": 39.4,
+      "wet_bulb": 26.0,
+      "solar_radiation": 737.8
+    },
+    {
+      "id": "tile_108",
+      "latitude": 33.4488,
+      "longitude": -112.0785,
+      "temperature": 39.8,
+      "humidity": 38.3,
+      "heat_index": 41.0,
+      "wet_bulb": 26.0,
+      "solar_radiation": 768.1
+    },
+    {
+      "id": "tile_109",
+      "latitude": 33.4488,
+      "longitude": -112.0776,
+      "temperature": 39.3,
+      "humidity": 36.6,
+      "heat_index": 40.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 758.8
+    },
+    {
+      "id": "tile_110",
+      "latitude": 33.4488,
+      "longitude": -112.0767,
+      "temperature": 40.7,
+      "humidity": 35.5,
+      "heat_index": 42.2,
+      "wet_bulb": 25.9,
+      "solar_radiation": 826.5
+    },
+    {
+      "id": "tile_111",
+      "latitude": 33.4488,
+      "longitude": -112.0758,
+      "temperature": 41.4,
+      "humidity": 31.4,
+      "heat_index": 42.9,
+      "wet_bulb": 25.6,
+      "solar_radiation": 853.4
+    },
+    {
+      "id": "tile_112",
+      "latitude": 33.4488,
+      "longitude": -112.0749,
+      "temperature": 41.7,
+      "humidity": 33.0,
+      "heat_index": 43.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 890.1
+    },
+    {
+      "id": "tile_113",
+      "latitude": 33.4488,
+      "longitude": -112.074,
+      "temperature": 42.5,
+      "humidity": 31.8,
+      "heat_index": 44.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 881.4
+    },
+    {
+      "id": "tile_114",
+      "latitude": 33.4488,
+      "longitude": -112.0731,
+      "temperature": 42.3,
+      "humidity": 32.7,
+      "heat_index": 44.2,
+      "wet_bulb": 25.8,
+      "solar_radiation": 842.5
+    },
+    {
+      "id": "tile_115",
+      "latitude": 33.4488,
+      "longitude": -112.0722,
+      "temperature": 41.3,
+      "humidity": 31.4,
+      "heat_index": 42.8,
+      "wet_bulb": 25.6,
+      "solar_radiation": 813.5
+    },
+    {
+      "id": "tile_116",
+      "latitude": 33.4488,
+      "longitude": -112.0713,
+      "temperature": 41.1,
+      "humidity": 37.0,
+      "heat_index": 42.8,
+      "wet_bulb": 26.0,
+      "solar_radiation": 772.9
+    },
+    {
+      "id": "tile_117",
+      "latitude": 33.4488,
+      "longitude": -112.0704,
+      "temperature": 39.9,
+      "humidity": 35.7,
+      "heat_index": 41.1,
+      "wet_bulb": 25.8,
+      "solar_radiation": 787.8
+    },
+    {
+      "id": "tile_118",
+      "latitude": 33.4488,
+      "longitude": -112.0695,
+      "temperature": 38.8,
+      "humidity": 39.8,
+      "heat_index": 39.7,
+      "wet_bulb": 26.0,
+      "solar_radiation": 697.6
+    },
+    {
+      "id": "tile_119",
+      "latitude": 33.4488,
+      "longitude": -112.0686,
+      "temperature": 38.2,
+      "humidity": 37.1,
+      "heat_index": 38.9,
+      "wet_bulb": 25.7,
+      "solar_radiation": 730.8
+    },
+    {
+      "id": "tile_120",
+      "latitude": 33.4488,
+      "longitude": -112.0677,
+      "temperature": 37.0,
+      "humidity": 37.6,
+      "heat_index": 37.2,
+      "wet_bulb": 25.6,
+      "solar_radiation": 675.0
+    },
+    {
+      "id": "tile_121",
+      "latitude": 33.4496,
+      "longitude": -112.0803,
+      "temperature": 38.9,
+      "humidity": 38.1,
+      "heat_index": 39.8,
+      "wet_bulb": 25.9,
+      "solar_radiation": 697.0
+    },
+    {
+      "id": "tile_122",
+      "latitude": 33.4496,
+      "longitude": -112.0794,
+      "temperature": 39.1,
+      "humidity": 37.6,
+      "heat_index": 40.1,
+      "wet_bulb": 25.8,
+      "solar_radiation": 713.8
+    },
+    {
+      "id": "tile_123",
+      "latitude": 33.4496,
+      "longitude": -112.0785,
+      "temperature": 39.4,
+      "humidity": 37.9,
+      "heat_index": 40.5,
+      "wet_bulb": 25.9,
+      "solar_radiation": 703.6
+    },
+    {
+      "id": "tile_124",
+      "latitude": 33.4496,
+      "longitude": -112.0776,
+      "temperature": 40.4,
+      "humidity": 35.7,
+      "heat_index": 41.8,
+      "wet_bulb": 25.8,
+      "solar_radiation": 783.2
+    },
+    {
+      "id": "tile_125",
+      "latitude": 33.4496,
+      "longitude": -112.0767,
+      "temperature": 40.8,
+      "humidity": 35.0,
+      "heat_index": 42.3,
+      "wet_bulb": 25.8,
+      "solar_radiation": 787.0
+    },
+    {
+      "id": "tile_126",
+      "latitude": 33.4496,
+      "longitude": -112.0758,
+      "temperature": 40.8,
+      "humidity": 33.8,
+      "heat_index": 42.3,
+      "wet_bulb": 25.7,
+      "solar_radiation": 811.2
+    },
+    {
+      "id": "tile_127",
+      "latitude": 33.4496,
+      "longitude": -112.0749,
+      "temperature": 41.6,
+      "humidity": 33.8,
+      "heat_index": 43.4,
+      "wet_bulb": 25.8,
+      "solar_radiation": 858.8
+    },
+    {
+      "id": "tile_128",
+      "latitude": 33.4496,
+      "longitude": -112.074,
+      "temperature": 42.0,
+      "humidity": 30.9,
+      "heat_index": 43.8,
+      "wet_bulb": 25.7,
+      "solar_radiation": 842.1
+    },
+    {
+      "id": "tile_129",
+      "latitude": 33.4496,
+      "longitude": -112.0731,
+      "temperature": 41.9,
+      "humidity": 31.7,
+      "heat_index": 43.7,
+      "wet_bulb": 25.7,
+      "solar_radiation": 805.2
+    },
+    {
+      "id": "tile_130",
+      "latitude": 33.4496,
+      "longitude": -112.0722,
+      "temperature": 41.3,
+      "humidity": 36.4,
+      "heat_index": 43.0,
+      "wet_bulb": 26.0,
+      "solar_radiation": 811.2
+    },
+    {
+      "id": "tile_131",
+      "latitude": 33.4496,
+      "longitude": -112.0713,
+      "temperature": 40.8,
+      "humidity": 36.5,
+      "heat_index": 42.3,
+      "wet_bulb": 25.9,
+      "solar_radiation": 748.0
+    },
+    {
+      "id": "tile_132",
+      "latitude": 33.4496,
+      "longitude": -112.0704,
+      "temperature": 39.4,
+      "humidity": 35.0,
+      "heat_index": 40.5,
+      "wet_bulb": 25.7,
+      "solar_radiation": 713.8
+    },
+    {
+      "id": "tile_133",
+      "latitude": 33.4496,
+      "longitude": -112.0695,
+      "temperature": 38.4,
+      "humidity": 39.1,
+      "heat_index": 39.2,
+      "wet_bulb": 25.9,
+      "solar_radiation": 713.2
+    },
+    {
+      "id": "tile_134",
+      "latitude": 33.4496,
+      "longitude": -112.0686,
+      "temperature": 37.7,
+      "humidity": 39.3,
+      "heat_index": 38.2,
+      "wet_bulb": 25.8,
+      "solar_radiation": 661.2
+    },
+    {
+      "id": "tile_135",
+      "latitude": 33.4496,
+      "longitude": -112.0677,
+      "temperature": 37.3,
+      "humidity": 41.9,
+      "heat_index": 37.8,
+      "wet_bulb": 26.0,
+      "solar_radiation": 693.6
+    },
+    {
+      "id": "tile_136",
+      "latitude": 33.4504,
+      "longitude": -112.0803,
+      "temperature": 38.7,
+      "humidity": 36.9,
+      "heat_index": 39.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 691.0
+    },
+    {
+      "id": "tile_137",
+      "latitude": 33.4504,
+      "longitude": -112.0794,
+      "temperature": 39.2,
+      "humidity": 37.8,
+      "heat_index": 40.3,
+      "wet_bulb": 25.9,
+      "solar_radiation": 720.0
+    },
+    {
+      "id": "tile_138",
+      "latitude": 33.4504,
+      "longitude": -112.0785,
+      "temperature": 39.8,
+      "humidity": 38.2,
+      "heat_index": 41.1,
+      "wet_bulb": 26.0,
+      "solar_radiation": 707.2
+    },
+    {
+      "id": "tile_139",
+      "latitude": 33.4504,
+      "longitude": -112.0776,
+      "temperature": 39.7,
+      "humidity": 33.7,
+      "heat_index": 40.8,
+      "wet_bulb": 25.6,
+      "solar_radiation": 736.0
+    },
+    {
+      "id": "tile_140",
+      "latitude": 33.4504,
+      "longitude": -112.0767,
+      "temperature": 40.4,
+      "humidity": 36.7,
+      "heat_index": 41.8,
+      "wet_bulb": 25.9,
+      "solar_radiation": 749.0
+    },
+    {
+      "id": "tile_141",
+      "latitude": 33.4504,
+      "longitude": -112.0758,
+      "temperature": 40.8,
+      "humidity": 34.7,
+      "heat_index": 42.3,
+      "wet_bulb": 25.8,
+      "solar_radiation": 778.4
+    },
+    {
+      "id": "tile_142",
+      "latitude": 33.4504,
+      "longitude": -112.0749,
+      "temperature": 41.5,
+      "humidity": 33.4,
+      "heat_index": 43.2,
+      "wet_bulb": 25.8,
+      "solar_radiation": 794.6
+    },
+    {
+      "id": "tile_143",
+      "latitude": 33.4504,
+      "longitude": -112.074,
+      "temperature": 41.7,
+      "humidity": 31.1,
+      "heat_index": 43.4,
+      "wet_bulb": 25.6,
+      "solar_radiation": 829.4
+    },
+    {
+      "id": "tile_144",
+      "latitude": 33.4504,
+      "longitude": -112.0731,
+      "temperature": 41.6,
+      "humidity": 32.4,
+      "heat_index": 43.3,
+      "wet_bulb": 25.7,
+      "solar_radiation": 789.2
+    },
+    {
+      "id": "tile_145",
+      "latitude": 33.4504,
+      "longitude": -112.0722,
+      "temperature": 40.4,
+      "humidity": 38.2,
+      "heat_index": 41.9,
+      "wet_bulb": 26.0,
+      "solar_radiation": 765.1
+    },
+    {
+      "id": "tile_146",
+      "latitude": 33.4504,
+      "longitude": -112.0713,
+      "temperature": 39.4,
+      "humidity": 36.3,
+      "heat_index": 40.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 753.0
+    },
+    {
+      "id": "tile_147",
+      "latitude": 33.4504,
+      "longitude": -112.0704,
+      "temperature": 38.8,
+      "humidity": 40.5,
+      "heat_index": 39.8,
+      "wet_bulb": 26.0,
+      "solar_radiation": 709.4
+    },
+    {
+      "id": "tile_148",
+      "latitude": 33.4504,
+      "longitude": -112.0695,
+      "temperature": 38.5,
+      "humidity": 40.4,
+      "heat_index": 39.4,
+      "wet_bulb": 26.0,
+      "solar_radiation": 706.9
+    },
+    {
+      "id": "tile_149",
+      "latitude": 33.4504,
+      "longitude": -112.0686,
+      "temperature": 37.8,
+      "humidity": 41.2,
+      "heat_index": 38.4,
+      "wet_bulb": 26.0,
+      "solar_radiation": 675.1
+    },
+    {
+      "id": "tile_150",
+      "latitude": 33.4504,
+      "longitude": -112.0677,
+      "temperature": 37.5,
+      "humidity": 41.8,
+      "heat_index": 38.1,
+      "wet_bulb": 26.0,
+      "solar_radiation": 670.2
+    },
+    {
+      "id": "tile_151",
+      "latitude": 33.4512,
+      "longitude": -112.0803,
+      "temperature": 39.5,
+      "humidity": 40.2,
+      "heat_index": 40.7,
+      "wet_bulb": 26.1,
+      "solar_radiation": 688.2
+    },
+    {
+      "id": "tile_152",
+      "latitude": 33.4512,
+      "longitude": -112.0794,
+      "temperature": 38.8,
+      "humidity": 37.7,
+      "heat_index": 39.7,
+      "wet_bulb": 25.8,
+      "solar_radiation": 699.6
+    },
+    {
+      "id": "tile_153",
+      "latitude": 33.4512,
+      "longitude": -112.0785,
+      "temperature": 39.5,
+      "humidity": 38.3,
+      "heat_index": 40.6,
+      "wet_bulb": 25.9,
+      "solar_radiation": 717.1
+    },
+    {
+      "id": "tile_154",
+      "latitude": 33.4512,
+      "longitude": -112.0776,
+      "temperature": 39.4,
+      "humidity": 34.9,
+      "heat_index": 40.4,
+      "wet_bulb": 25.7,
+      "solar_radiation": 717.8
+    },
+    {
+      "id": "tile_155",
+      "latitude": 33.4512,
+      "longitude": -112.0767,
+      "temperature": 39.7,
+      "humidity": 35.2,
+      "heat_index": 40.8,
+      "wet_bulb": 25.7,
+      "solar_radiation": 757.2
+    },
+    {
+      "id": "tile_156",
+      "latitude": 33.4512,
+      "longitude": -112.0758,
+      "temperature": 39.9,
+      "humidity": 34.0,
+      "heat_index": 41.1,
+      "wet_bulb": 25.7,
+      "solar_radiation": 784.6
+    },
+    {
+      "id": "tile_157",
+      "latitude": 33.4512,
+      "longitude": -112.0749,
+      "temperature": 40.8,
+      "humidity": 32.8,
+      "heat_index": 42.2,
+      "wet_bulb": 25.7,
+      "solar_radiation": 773.0
+    },
+    {
+      "id": "tile_158",
+      "latitude": 33.4512,
+      "longitude": -112.074,
+      "temperature": 40.8,
+      "humidity": 34.7,
+      "heat_index": 42.2,
+      "wet_bulb": 25.8,
+      "solar_radiation": 755.7
+    },
+    {
+      "id": "tile_159",
+      "latitude": 33.4512,
+      "longitude": -112.0731,
+      "temperature": 40.5,
+      "humidity": 38.0,
+      "heat_index": 42.0,
+      "wet_bulb": 26.0,
+      "solar_radiation": 765.0
+    },
+    {
+      "id": "tile_160",
+      "latitude": 33.4512,
+      "longitude": -112.0722,
+      "temperature": 40.1,
+      "humidity": 39.2,
+      "heat_index": 41.6,
+      "wet_bulb": 26.1,
+      "solar_radiation": 749.2
+    },
+    {
+      "id": "tile_161",
+      "latitude": 33.4512,
+      "longitude": -112.0713,
+      "temperature": 39.0,
+      "humidity": 36.5,
+      "heat_index": 39.9,
+      "wet_bulb": 25.8,
+      "solar_radiation": 687.7
+    },
+    {
+      "id": "tile_162",
+      "latitude": 33.4512,
+      "longitude": -112.0704,
+      "temperature": 38.5,
+      "humidity": 42.0,
+      "heat_index": 39.4,
+      "wet_bulb": 26.1,
+      "solar_radiation": 701.8
+    },
+    {
+      "id": "tile_163",
+      "latitude": 33.4512,
+      "longitude": -112.0695,
+      "temperature": 37.4,
+      "humidity": 42.3,
+      "heat_index": 38.0,
+      "wet_bulb": 26.0,
+      "solar_radiation": 654.6
+    },
+    {
+      "id": "tile_164",
+      "latitude": 33.4512,
+      "longitude": -112.0686,
+      "temperature": 37.3,
+      "humidity": 39.8,
+      "heat_index": 37.7,
+      "wet_bulb": 25.8,
+      "solar_radiation": 628.1
+    },
+    {
+      "id": "tile_165",
+      "latitude": 33.4512,
+      "longitude": -112.0677,
+      "temperature": 37.4,
+      "humidity": 38.0,
+      "heat_index": 37.9,
+      "wet_bulb": 25.7,
+      "solar_radiation": 652.9
+    },
+    {
+      "id": "tile_166",
+      "latitude": 33.452,
+      "longitude": -112.0803,
+      "temperature": 39.1,
+      "humidity": 38.5,
+      "heat_index": 40.1,
+      "wet_bulb": 25.9,
+      "solar_radiation": 666.5
+    },
+    {
+      "id": "tile_167",
+      "latitude": 33.452,
+      "longitude": -112.0794,
+      "temperature": 38.8,
+      "humidity": 37.1,
+      "heat_index": 39.7,
+      "wet_bulb": 25.8,
+      "solar_radiation": 698.5
+    },
+    {
+      "id": "tile_168",
+      "latitude": 33.452,
+      "longitude": -112.0785,
+      "temperature": 38.2,
+      "humidity": 38.5,
+      "heat_index": 38.9,
+      "wet_bulb": 25.8,
+      "solar_radiation": 694.5
+    },
+    {
+      "id": "tile_169",
+      "latitude": 33.452,
+      "longitude": -112.0776,
+      "temperature": 38.3,
+      "humidity": 38.9,
+      "heat_index": 39.1,
+      "wet_bulb": 25.9,
+      "solar_radiation": 682.2
+    },
+    {
+      "id": "tile_170",
+      "latitude": 33.452,
+      "longitude": -112.0767,
+      "temperature": 39.0,
+      "humidity": 35.1,
+      "heat_index": 39.8,
+      "wet_bulb": 25.7,
+      "solar_radiation": 717.9
+    },
+    {
+      "id": "tile_171",
+      "latitude": 33.452,
+      "longitude": -112.0758,
+      "temperature": 39.0,
+      "humidity": 35.9,
+      "heat_index": 39.9,
+      "wet_bulb": 25.7,
+      "solar_radiation": 758.3
+    },
+    {
+      "id": "tile_172",
+      "latitude": 33.452,
+      "longitude": -112.0749,
+      "temperature": 39.4,
+      "humidity": 37.7,
+      "heat_index": 40.6,
+      "wet_bulb": 25.9,
+      "solar_radiation": 769.7
+    },
+    {
+      "id": "tile_173",
+      "latitude": 33.452,
+      "longitude": -112.074,
+      "temperature": 39.5,
+      "humidity": 34.6,
+      "heat_index": 40.5,
+      "wet_bulb": 25.7,
+      "solar_radiation": 709.3
+    },
+    {
+      "id": "tile_174",
+      "latitude": 33.452,
+      "longitude": -112.0731,
+      "temperature": 39.6,
+      "humidity": 39.9,
+      "heat_index": 40.9,
+      "wet_bulb": 26.1,
+      "solar_radiation": 717.4
+    },
+    {
+      "id": "tile_175",
+      "latitude": 33.452,
+      "longitude": -112.0722,
+      "temperature": 39.2,
+      "humidity": 40.0,
+      "heat_index": 40.4,
+      "wet_bulb": 26.0,
+      "solar_radiation": 714.0
+    },
+    {
+      "id": "tile_176",
+      "latitude": 33.452,
+      "longitude": -112.0713,
+      "temperature": 38.6,
+      "humidity": 42.2,
+      "heat_index": 39.6,
+      "wet_bulb": 26.1,
+      "solar_radiation": 654.1
+    },
+    {
+      "id": "tile_177",
+      "latitude": 33.452,
+      "longitude": -112.0704,
+      "temperature": 37.1,
+      "humidity": 39.4,
+      "heat_index": 37.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 624.7
+    },
+    {
+      "id": "tile_178",
+      "latitude": 33.452,
+      "longitude": -112.0695,
+      "temperature": 37.2,
+      "humidity": 42.0,
+      "heat_index": 37.6,
+      "wet_bulb": 26.0,
+      "solar_radiation": 618.7
+    },
+    {
+      "id": "tile_179",
+      "latitude": 33.452,
+      "longitude": -112.0686,
+      "temperature": 37.3,
+      "humidity": 42.3,
+      "heat_index": 37.8,
+      "wet_bulb": 26.0,
+      "solar_radiation": 628.5
+    },
+    {
+      "id": "tile_180",
+      "latitude": 33.452,
+      "longitude": -112.0677,
+      "temperature": 37.5,
+      "humidity": 41.4,
+      "heat_index": 38.0,
+      "wet_bulb": 25.9,
+      "solar_radiation": 639.8
+    },
+    {
+      "id": "tile_181",
+      "latitude": 33.4528,
+      "longitude": -112.0803,
+      "temperature": 38.9,
+      "humidity": 41.3,
+      "heat_index": 39.9,
+      "wet_bulb": 26.1,
+      "solar_radiation": 662.6
+    },
+    {
+      "id": "tile_182",
+      "latitude": 33.4528,
+      "longitude": -112.0794,
+      "temperature": 38.1,
+      "humidity": 38.1,
+      "heat_index": 38.7,
+      "wet_bulb": 25.8,
+      "solar_radiation": 702.4
+    },
+    {
+      "id": "tile_183",
+      "latitude": 33.4528,
+      "longitude": -112.0785,
+      "temperature": 38.7,
+      "humidity": 38.5,
+      "heat_index": 39.5,
+      "wet_bulb": 25.9,
+      "solar_radiation": 705.0
+    },
+    {
+      "id": "tile_184",
+      "latitude": 33.4528,
+      "longitude": -112.0776,
+      "temperature": 37.6,
+      "humidity": 40.0,
+      "heat_index": 38.1,
+      "wet_bulb": 25.9,
+      "solar_radiation": 698.8
+    },
+    {
+      "id": "tile_185",
+      "latitude": 33.4528,
+      "longitude": -112.0767,
+      "temperature": 37.5,
+      "humidity": 40.1,
+      "heat_index": 38.1,
+      "wet_bulb": 25.9,
+      "solar_radiation": 720.8
+    },
+    {
+      "id": "tile_186",
+      "latitude": 33.4528,
+      "longitude": -112.0758,
+      "temperature": 38.2,
+      "humidity": 36.3,
+      "heat_index": 38.9,
+      "wet_bulb": 25.7,
+      "solar_radiation": 741.9
+    },
+    {
+      "id": "tile_187",
+      "latitude": 33.4528,
+      "longitude": -112.0749,
+      "temperature": 38.6,
+      "humidity": 37.2,
+      "heat_index": 39.5,
+      "wet_bulb": 25.8,
+      "solar_radiation": 708.7
+    },
+    {
+      "id": "tile_188",
+      "latitude": 33.4528,
+      "longitude": -112.074,
+      "temperature": 38.4,
+      "humidity": 38.1,
+      "heat_index": 39.2,
+      "wet_bulb": 25.8,
+      "solar_radiation": 700.2
+    },
+    {
+      "id": "tile_189",
+      "latitude": 33.4528,
+      "longitude": -112.0731,
+      "temperature": 38.8,
+      "humidity": 40.3,
+      "heat_index": 39.9,
+      "wet_bulb": 26.0,
+      "solar_radiation": 672.4
+    },
+    {
+      "id": "tile_190",
+      "latitude": 33.4528,
+      "longitude": -112.0722,
+      "temperature": 38.6,
+      "humidity": 40.3,
+      "heat_index": 39.6,
+      "wet_bulb": 26.0,
+      "solar_radiation": 703.9
+    },
+    {
+      "id": "tile_191",
+      "latitude": 33.4528,
+      "longitude": -112.0713,
+      "temperature": 37.8,
+      "humidity": 40.3,
+      "heat_index": 38.5,
+      "wet_bulb": 25.9,
+      "solar_radiation": 674.8
+    },
+    {
+      "id": "tile_192",
+      "latitude": 33.4528,
+      "longitude": -112.0704,
+      "temperature": 37.6,
+      "humidity": 40.0,
+      "heat_index": 38.2,
+      "wet_bulb": 25.9,
+      "solar_radiation": 669.3
+    },
+    {
+      "id": "tile_193",
+      "latitude": 33.4528,
+      "longitude": -112.0695,
+      "temperature": 37.1,
+      "humidity": 40.9,
+      "heat_index": 37.5,
+      "wet_bulb": 25.9,
+      "solar_radiation": 647.3
+    },
+    {
+      "id": "tile_194",
+      "latitude": 33.4528,
+      "longitude": -112.0686,
+      "temperature": 37.3,
+      "humidity": 39.3,
+      "heat_index": 37.7,
+      "wet_bulb": 25.8,
+      "solar_radiation": 686.3
+    },
+    {
+      "id": "tile_195",
+      "latitude": 33.4528,
+      "longitude": -112.0677,
+      "temperature": 37.5,
+      "humidity": 37.8,
+      "heat_index": 38.0,
+      "wet_bulb": 25.7,
+      "solar_radiation": 699.5
+    },
+    {
+      "id": "tile_196",
+      "latitude": 33.4536,
+      "longitude": -112.0803,
+      "temperature": 38.0,
+      "humidity": 38.8,
+      "heat_index": 38.7,
+      "wet_bulb": 25.8,
+      "solar_radiation": 697.7
+    },
+    {
+      "id": "tile_197",
+      "latitude": 33.4536,
+      "longitude": -112.0794,
+      "temperature": 38.1,
+      "humidity": 36.6,
+      "heat_index": 38.7,
+      "wet_bulb": 25.7,
+      "solar_radiation": 714.6
+    },
+    {
+      "id": "tile_198",
+      "latitude": 33.4536,
+      "longitude": -112.0785,
+      "temperature": 37.7,
+      "humidity": 37.6,
+      "heat_index": 38.2,
+      "wet_bulb": 25.7,
+      "solar_radiation": 710.8
+    },
+    {
+      "id": "tile_199",
+      "latitude": 33.4536,
+      "longitude": -112.0776,
+      "temperature": 37.5,
+      "humidity": 40.9,
+      "heat_index": 38.1,
+      "wet_bulb": 25.9,
+      "solar_radiation": 704.0
+    },
+    {
+      "id": "tile_200",
+      "latitude": 33.4536,
+      "longitude": -112.0767,
+      "temperature": 37.2,
+      "humidity": 36.6,
+      "heat_index": 37.5,
+      "wet_bulb": 25.6,
+      "solar_radiation": 721.2
+    },
+    {
+      "id": "tile_201",
+      "latitude": 33.4536,
+      "longitude": -112.0758,
+      "temperature": 37.0,
+      "humidity": 40.1,
+      "heat_index": 37.3,
+      "wet_bulb": 25.8,
+      "solar_radiation": 688.5
+    },
+    {
+      "id": "tile_202",
+      "latitude": 33.4536,
+      "longitude": -112.0749,
+      "temperature": 37.7,
+      "humidity": 40.1,
+      "heat_index": 38.3,
+      "wet_bulb": 25.9,
+      "solar_radiation": 698.1
+    },
+    {
+      "id": "tile_203",
+      "latitude": 33.4536,
+      "longitude": -112.074,
+      "temperature": 37.6,
+      "humidity": 40.7,
+      "heat_index": 38.2,
+      "wet_bulb": 25.9,
+      "solar_radiation": 656.3
+    },
+    {
+      "id": "tile_204",
+      "latitude": 33.4536,
+      "longitude": -112.0731,
+      "temperature": 37.5,
+      "humidity": 40.5,
+      "heat_index": 38.0,
+      "wet_bulb": 25.9,
+      "solar_radiation": 666.0
+    },
+    {
+      "id": "tile_205",
+      "latitude": 33.4536,
+      "longitude": -112.0722,
+      "temperature": 37.8,
+      "humidity": 39.7,
+      "heat_index": 38.4,
+      "wet_bulb": 25.9,
+      "solar_radiation": 675.0
+    },
+    {
+      "id": "tile_206",
+      "latitude": 33.4536,
+      "longitude": -112.0713,
+      "temperature": 37.5,
+      "humidity": 41.4,
+      "heat_index": 38.1,
+      "wet_bulb": 26.0,
+      "solar_radiation": 655.0
+    },
+    {
+      "id": "tile_207",
+      "latitude": 33.4536,
+      "longitude": -112.0704,
+      "temperature": 37.6,
+      "humidity": 39.2,
+      "heat_index": 38.1,
+      "wet_bulb": 25.8,
+      "solar_radiation": 647.0
+    },
+    {
+      "id": "tile_208",
+      "latitude": 33.4536,
+      "longitude": -112.0695,
+      "temperature": 36.8,
+      "humidity": 38.7,
+      "heat_index": 37.2,
+      "wet_bulb": 25.7,
+      "solar_radiation": 640.2
+    },
+    {
+      "id": "tile_209",
+      "latitude": 33.4536,
+      "longitude": -112.0686,
+      "temperature": 37.1,
+      "humidity": 41.2,
+      "heat_index": 37.5,
+      "wet_bulb": 25.9,
+      "solar_radiation": 650.8
+    },
+    {
+      "id": "tile_210",
+      "latitude": 33.4536,
+      "longitude": -112.0677,
+      "temperature": 36.8,
+      "humidity": 39.5,
+      "heat_index": 37.2,
+      "wet_bulb": 25.7,
+      "solar_radiation": 695.3
+    }
+  ]
+}
