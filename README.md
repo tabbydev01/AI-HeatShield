@@ -1,8 +1,15 @@
-# 🔥 AI HeatShield
+🔥 AI HeatShield
 
-## Hyperlocal Heat Risk & Urban Decision Intelligence Platform
+Hyperlocal Heat Risk & Urban Decision Intelligence Platform
 
 AI HeatShield is a hyperlocal urban heat intelligence and decision-support platform built for FortyGuard Hackathon'26.
+
+Live Demo: https://ai-heatshield.vercel.app
+Production API: https://ai-heatshield.fastapicloud.dev
+GitHub: https://github.com/tabbydev01/AI-HeatShield
+
+Production spatial granularity: 100 m
+Primary spatial heat source: FortyGuard Heatmap API
 
 Instead of only displaying temperature, AI HeatShield transforms spatial heat information into actionable intelligence by combining:
 
@@ -28,7 +35,7 @@ The platform is designed to help cities, campuses, communities, outdoor operatio
 
 Where is heat risk highest, why is it happening, who may be most affected, what could happen next, and what actions could reduce the risk?
 
-# 1. Problem
+1. Problem
 
 Extreme urban heat is becoming an increasingly important challenge for cities.
 
@@ -82,10 +89,9 @@ What interventions could potentially reduce the risk?
 
 AI HeatShield is designed around these questions.
 
-# 2. Solution
+2. Solution
 
 AI HeatShield converts hyperlocal heat information into a complete urban heat decision-intelligence pipeline.
-
 
 Heat Data
 
@@ -129,22 +135,17 @@ Urban Intervention Simulation
 
 Interactive Decision Dashboard
 
-
 The objective is to move from:
-
 
 Raw Heat Data
 
-
 to:
-
 
 Actionable Urban Decisions
 
+3. Core Features
 
-# 3. Core Features
-
-## 3.1 Hyperlocal Heat Map
+3.1 Hyperlocal Heat Map
 
 AI HeatShield displays the analysis area as interactive spatial heat cells.
 
@@ -182,25 +183,25 @@ Vulnerability assessment
 
 Intervention scenarios
 
-## 3.2 Multi-Layer Spatial Visualization
+3.2 Multi-Layer Spatial Visualization
 
 The interactive map supports multiple analytical views.
 
-### Risk Layer
+Risk Layer
 
 Displays relative heat-risk severity.
 
-### Temperature Layer
+Temperature Layer
 
 Displays spatial temperature variation.
 
-### Heat Index Layer
+Heat Index Layer
 
 Displays variation in perceived thermal conditions.
 
 This allows users to understand how environmental conditions vary across the analysis area.
 
-# 4. Explainable Heat-Risk Engine
+4. Explainable Heat-Risk Engine
 
 AI HeatShield uses an explainable weighted risk model.
 
@@ -222,9 +223,7 @@ The current model considers:
 
 The resulting score is normalized between:
 
-
 0 – 100
-
 
 Risk categories are:
 
@@ -246,12 +245,11 @@ Because the system retains individual factor contributions, the dashboard can ex
 
 This makes the model more interpretable than a simple unexplained risk number.
 
-# 5. Explainable Risk Drivers
+5. Explainable Risk Drivers
 
 For every selected zone, AI HeatShield ranks environmental contributors to the calculated heat risk.
 
 Examples include:
-
 
 Temperature
 
@@ -263,14 +261,11 @@ Wet Bulb
 
 Humidity
 
-
 The dashboard identifies:
-
 
 Primary Risk Driver
 
 Secondary Risk Driver
-
 
 and visualizes individual factor contributions.
 
@@ -278,7 +273,7 @@ This helps answer:
 
 Why is this location currently considered risky?
 
-# 6. Heat Hotspot Detection
+6. Heat Hotspot Detection
 
 AI HeatShield analyzes all spatial cells and ranks them according to their heat-risk score.
 
@@ -300,12 +295,11 @@ Risk-factor contributions
 
 This can help decision-makers prioritize limited cooling or emergency-response resources.
 
-# 7. 12-Hour Risk Outlook
+7. 12-Hour Risk Outlook
 
 AI HeatShield includes a short-term heat-risk forecasting layer.
 
 The current prototype evaluates scenario checkpoints at:
-
 
 Now
 
@@ -316,7 +310,6 @@ Now
 +9 Hours
 
 +12 Hours
-
 
 For each point it estimates:
 
@@ -332,19 +325,19 @@ Risk category
 
 This allows users to see whether conditions may:
 
-
 Improve
 
 Remain Elevated
 
 Become More Dangerous
 
+Forecast Transparency
 
-### Demo Forecast Transparency
+In the deployed production workflow, future checkpoints at +3, +6, +9, and +12 hours use cached FortyGuard future heatmaps within FortyGuard's supported forecast window. Open-Meteo provides contextual environmental inputs, and AI HeatShield recomputes the decision-support risk metrics for each forecast checkpoint.
 
-These forecast points are scenario-generated projections used to demonstrate the decision-support workflow, including when the primary heatmap source is LIVE. They are not observed future FortyGuard or Open-Meteo measurements and should not be interpreted as an operational meteorological forecast. FortyGuard's Create Heatmap capability can support future timestamps within its documented forecast window; integrating those future heatmaps is a planned upgrade.
+Forecast-derived risk scores are AI HeatShield decision-support outputs and should not be interpreted as medical predictions or guaranteed future outcomes.
 
-# 8. Historical Heat Comparison
+8. Historical Heat Comparison
 
 AI HeatShield includes a historical comparison module.
 
@@ -358,17 +351,15 @@ Risk score
 
 The system classifies the relative trend as:
 
-
 WARMING
 
 COOLING
 
 STABLE
 
-
 It also displays a recent historical-style risk progression for visualization.
 
-### Historical Data Transparency
+Historical Data Transparency
 
 The current demonstration historical values are generated from an estimated baseline.
 
@@ -376,14 +367,13 @@ They are used to demonstrate the historical-comparison workflow and must not be 
 
 The production architecture can replace this layer with actual historical observations when available.
 
-# 9. Population Vulnerability Intelligence
+9. Population Vulnerability Intelligence
 
 The same thermal conditions may affect different groups differently.
 
 AI HeatShield therefore includes a heuristic population-vulnerability decision-support layer.
 
 Current demonstration personas include:
-
 
 Outdoor Worker
 
@@ -392,7 +382,6 @@ Elderly
 Child
 
 General Public
-
 
 The system adjusts the base environmental risk using persona-specific sensitivity assumptions and relevant environmental conditions.
 
@@ -408,56 +397,45 @@ Primary reason
 
 Recommended action
 
-### Important Disclaimer
+Important Disclaimer
 
 Persona vulnerability scores are heuristic decision-support estimates.
 
 They are not medical, clinical, diagnostic, or individual health-risk predictions.
 
-# 10. Recommendation Engine
+10. Recommendation Engine
 
 AI HeatShield converts heat-risk intelligence into practical actions.
 
 Depending on environmental conditions, recommendations may include:
 
-### Human Safety
-
+Human Safety
 
 Restrict peak-hour outdoor exposure
 
-
-### Urban Design
-
+Urban Design
 
 Increase temporary or permanent shade
 
-
-### Hydration
-
+Hydration
 
 Deploy hydration points
 
-
-### Vulnerable Population Protection
-
+Vulnerable Population Protection
 
 Prioritize high-risk groups
 
-
-### Operations
-
+Operations
 
 Move strenuous outdoor activity to cooler hours
 
-
 This transforms the platform from a monitoring dashboard into a decision-support system.
 
-# 11. Urban Intervention Simulator
+11. Urban Intervention Simulator
 
 One of the key features of AI HeatShield is its urban cooling intervention simulator.
 
 The current system evaluates scenarios including:
-
 
 Shade Structures
 
@@ -467,9 +445,7 @@ Cool / Reflective Surface
 
 Combined Cooling Strategy
 
-
 For every scenario, the dashboard shows:
-
 
 Current Risk Score
 
@@ -481,9 +457,7 @@ Estimated New Risk Score
 
 Risk Reduction
 
-
 Example:
-
 
 Current Risk: 82
 
@@ -495,21 +469,19 @@ Estimated Risk: 69
 
 Estimated Reduction: 13 points
 
-
 This can help planners compare possible mitigation strategies before deciding where further investigation or investment may be useful.
 
-### Intervention Transparency
+Intervention Transparency
 
 Intervention results are scenario-based decision-support estimates.
 
 They are not validated causal predictions and should not be interpreted as guaranteed real-world outcomes.
 
-# 12. FortyGuard Integration Architecture
+12. FortyGuard Integration Architecture
 
 AI HeatShield includes an adapter architecture for integrating FortyGuard heat intelligence.
 
 The deployed FortyGuard flow is:
-
 
 User selects an area
 
@@ -548,7 +520,6 @@ Decision Intelligence
         ↓
 
 Interactive Dashboard
-
 
 The integration layer supports the asynchronous workflow where a heatmap request returns an activity identifier and the application polls for completion. The integration uses POST /v1/heatmap to create a heatmap task and GET /v1/status/{activity_id} to retrieve completion/results, with the API key supplied in the api-key header.
 
@@ -594,7 +565,7 @@ Derived per heat cell
 
 Open-Meteo values are contextual weather-grid/reanalysis data and are not presented as FortyGuard hyperlocal measurements. Spatial variation in the live heatmap continues to come from FortyGuard temperature cells.
 
-# 13. API-Efficient Heatmap Caching
+13. API-Efficient Heatmap Caching
 
 Interactive dashboards can generate many frontend requests when users click different spatial cells.
 
@@ -604,12 +575,9 @@ AI HeatShield therefore maintains a backend heatmap cache.
 
 Current cache duration:
 
-
 15 minutes
 
-
 Flow:
-
 
 First Analysis Request
 
@@ -633,42 +601,37 @@ Reuse Cached Heatmap
 
 Run Local Decision Analysis
 
-
 This reduces unnecessary upstream requests and improves dashboard responsiveness.
 
-# 14. Data Source Transparency
+14. Data Source Transparency
 
 AI HeatShield explicitly tracks the source of the active dataset.
 
 The backend supports three source states.
 
-## LIVE
-
-
 LIVE
 
+The active heatmap was successfully retrieved through the FortyGuard API and is being served from the current live-data workflow.
 
-The heatmap was successfully retrieved through the FortyGuard API. In the hackathon demo, LIVE means a live API integration fetching real FortyGuard data; it does not mean that the displayed timestamp is current real-time weather.
+CACHED_LIVE
 
-## DEMO
-
+A previously retrieved real FortyGuard heatmap is being served from the production cache. This keeps the dashboard responsive while preserving real FortyGuard-backed spatial data.
 
 DEMO
 
+DEMO
 
 The application is intentionally using the bundled synthetic demonstration dataset.
 
-## DEMO_FALLBACK
-
-
 DEMO_FALLBACK
 
+DEMO_FALLBACK
 
 A live request was attempted but failed, so the application safely returned demonstration data instead.
 
 This distinction prevents fallback data from being presented as successful live observations.
 
-# 15. Demo Mode
+15. Demo Mode
 
 AI HeatShield can operate without an external API key.
 
@@ -676,9 +639,7 @@ If no FortyGuard API key is configured, the application automatically runs using
 
 The demo dataset contains approximately:
 
-
 210 hyperlocal heat cells
-
 
 around Phoenix, Arizona.
 
@@ -698,12 +659,11 @@ Risk-engine testing
 
 Offline product demonstrations
 
-# 16. Live Mode
+16. Live Mode
 
-When a valid FortyGuard API key is configured, the adapter requests FortyGuard heatmap data through the live API integration. The verified hackathon deployment uses a deterministic New York City historical request (2024-07-15 at 14:00 local time) so the demo remains reproducible.
+When a valid FortyGuard API key is configured, the adapter requests FortyGuard heatmap data through the live API integration. The production deployment uses a New York City area of interest at 100-meter granularity and supports current heat retrieval plus cached +3/+6/+9/+12-hour FortyGuard forecast heatmaps.
 
 Environment configuration:
-
 
 FORTYGUARD_API_KEY=your_api_key_here
 
@@ -711,25 +671,19 @@ FORTYGUARD_BASE_URL=https://api.fortyguard.com
 
 DEMO_MODE=false
 
-
 API keys must never be committed to Git.
 
 The repository should contain only:
 
-
 .env.example
-
 
 while the real:
 
-
 .env
-
 
 remains ignored.
 
-# 17. System Architecture
-
+17. System Architecture
 
 ┌─────────────────────────────────────────────┐
 
@@ -837,11 +791,9 @@ remains ignored.
 
 └─────────────────────────────────────────────┘
 
+18. Technology Stack
 
-# 18. Technology Stack
-
-## Frontend
-
+Frontend
 
 Next.js 16
 
@@ -855,9 +807,7 @@ Leaflet
 
 React Leaflet
 
-
-## Backend
-
+Backend
 
 Python
 
@@ -869,25 +819,17 @@ HTTPX
 
 Uvicorn
 
-
-## External Heat Intelligence
-
+External Heat Intelligence
 
 FortyGuard API Adapter
 
-
-## Mapping
-
+Mapping
 
 Leaflet
 
 OpenStreetMap
 
-CARTO basemap
-
-
-## Development
-
+Development
 
 Git
 
@@ -899,9 +841,7 @@ Python Virtual Environment
 
 npm
 
-
-# 19. Project Structure
-
+19. Project Structure
 
 AI-HeatShield/
 
@@ -985,41 +925,29 @@ AI-HeatShield/
 
 └── README.md
 
-
-# 20. Backend Setup
+20. Backend Setup
 
 Move to the backend:
 
-
 cd backend
-
 
 Create a virtual environment:
 
-
 python -m venv .venv
-
 
 Activate it:
 
-
-.\\.venv\Scripts\Activate.ps1
-
+.\.venv\Scripts\Activate.ps1
 
 Install dependencies:
 
-
 pip install fastapi "uvicorn[standard]" httpx python-dotenv pydantic-settings
-
 
 Create:
 
-
 backend/.env
 
-
 Example:
-
 
 FORTYGUARD_API_KEY=
 
@@ -1027,101 +955,71 @@ FORTYGUARD_BASE_URL=https://api.fortyguard.com
 
 DEMO_MODE=false
 
-
 If the API key is empty, AI HeatShield automatically operates in demo mode.
 
 Start the backend:
 
-
-uvicorn app.main\:app --reload
-
+uvicorn app.main:app --reload
 
 Backend:
 
-
 http://127.0.0.1:8000
-
 
 API documentation:
 
-
 http://127.0.0.1:8000/docs
-
 
 Analysis endpoint:
 
-
 http://127.0.0.1:8000/api/analyze
 
-
-# 21. Frontend Setup
+21. Frontend Setup
 
 Open another terminal.
 
 Move to:
 
-
 cd frontend
-
 
 Install dependencies:
 
-
 npm install
-
 
 Create:
 
-
 frontend/.env.local
-
 
 Add:
 
-
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
-
 
 Start the frontend:
 
-
 npm run dev
-
 
 Open:
 
-
 http://localhost:3000
 
-
-# 22. Production Build
+22. Production Build
 
 Before deployment, verify the frontend production build:
 
-
 npm run build
-
 
 Then production mode can be started using:
 
-
 npm start
 
-
-# 23. Main Backend Endpoint
-
+23. Main Backend Endpoint
 
 GET /api/analyze
 
-
 Optional selected heat cell:
 
-
-GET /api/analyze?tile_id=\<tile_id>
-
+GET /api/analyze?tile_id=<tile_id>
 
 Example response structure:
-
 
 {
 
@@ -1149,11 +1047,9 @@ Example response structure:
 
 }
 
-
-# 24. Unified Analysis Response
+24. Unified Analysis Response
 
 One analysis request can provide the frontend with:
-
 
 Location
 
@@ -1197,39 +1093,35 @@ Recommendations
 
 Intervention Scenarios
 
-
 This keeps the frontend architecture simple while the backend coordinates the analytical services.
 
-# 25. Example User Journey
+25. Example User Journey
 
 A city planner opens AI HeatShield.
 
-### Step 1
+Step 1
 
 The dashboard displays the heat landscape.
 
-### Step 2
+Step 2
 
 The planner identifies a high-risk area.
 
-### Step 3
+Step 3
 
 They select the heat cell.
 
-### Step 4
+Step 4
 
 AI HeatShield calculates:
-
 
 Risk Score: 84
 
 Risk Level: VERY HIGH
 
-
-### Step 5
+Step 5
 
 The system explains the major drivers.
-
 
 Temperature
 
@@ -1237,11 +1129,9 @@ Solar Radiation
 
 Heat Index
 
-
-### Step 6
+Step 6
 
 The system evaluates population vulnerability.
-
 
 Outdoor Worker → highest relative risk
 
@@ -1251,11 +1141,9 @@ Child → elevated risk
 
 General Public → baseline risk
 
-
-### Step 7
+Step 7
 
 The recommendation engine proposes actions.
-
 
 Increase shade
 
@@ -1265,11 +1153,9 @@ Adjust outdoor work schedules
 
 Protect vulnerable populations
 
-
-### Step 8
+Step 8
 
 The planner evaluates interventions.
-
 
 Shade
 
@@ -1279,53 +1165,51 @@ Cool Surface
 
 Combined Cooling
 
-
 The platform estimates how each scenario could change the calculated risk.
 
-# 26. Potential Real-World Users
+26. Potential Real-World Users
 
 AI HeatShield could support decision-making for:
 
-### Municipal Governments
+Municipal Governments
 
 Urban heat mitigation and hotspot prioritization.
 
-### Smart-City Teams
+Smart-City Teams
 
 Climate resilience monitoring.
 
-### Universities and Campuses
+Universities and Campuses
 
 Outdoor student and staff safety.
 
-### Construction Companies
+Construction Companies
 
 Outdoor workforce heat-risk planning.
 
-### Event Organizers
+Event Organizers
 
 Outdoor event safety.
 
-### Logistics Operations
+Logistics Operations
 
 Driver and delivery-worker heat exposure planning.
 
-### Public Health Teams
+Public Health Teams
 
 Community heat-response prioritization.
 
-### Urban Planners
+Urban Planners
 
 Evaluating potential cooling strategies.
 
-# 27. What Makes AI HeatShield Different?
+27. What Makes AI HeatShield Different?
 
 Many weather applications answer:
 
 How hot is the city?
 
 AI HeatShield is designed to answer:
-
 
 WHERE is heat risk highest?
 
@@ -1349,93 +1233,83 @@ WHAT action should be considered?
 
 HOW could an intervention change the risk?
 
-
 This moves the product from:
-
 
 Weather Visualization
 
-
 toward:
-
 
 Urban Heat Decision Intelligence
 
-
-# 28. Responsible AI & Data Transparency
+28. Responsible AI & Data Transparency
 
 AI HeatShield clearly separates:
 
-
 External / Retrieved Data
-
 
 from:
 
-
 Estimated / Scenario / Synthetic Data
-
 
 The platform follows several transparency principles:
 
-1. Synthetic demonstration data is labeled as synthetic.
+Synthetic demonstration data is labeled as synthetic.
 
-2. Live data and demo data use different source states.
+Live data and demo data use different source states.
 
-3. API fallback is labeled DEMO_FALLBACK.
+API fallback is labeled DEMO_FALLBACK.
 
-4. Historical demo baselines are labeled estimated.
+Historical demo baselines are labeled estimated.
 
-5. Forecast demo values are labeled scenario-generated.
+Forecast risk values are labeled as decision-support outputs derived from forecast/context data.
 
-6. Intervention simulations are labeled estimates.
+Intervention simulations are labeled estimates.
 
-7. Vulnerability scores are labeled heuristic decision-support.
+Vulnerability scores are labeled heuristic decision-support.
 
-8. Vulnerability outputs are not presented as medical predictions.
+Vulnerability outputs are not presented as medical predictions.
 
 These distinctions are important for responsible climate decision-support systems.
 
-# 29. Current Limitations
+29. Current Limitations
 
 The hackathon prototype currently has several limitations.
 
-### Demonstration Dataset
+Demonstration Dataset
 
 Without a configured external API key, the system uses synthetic Phoenix heat data.
 
-### Forecast Model
+Forecast Interpretation
 
-The current demo forecast uses deterministic scenario assumptions rather than a trained operational forecasting model.
+The production forecast layer uses FortyGuard future heatmaps with Open-Meteo environmental context and AI HeatShield risk recomputation. The resulting risk outlook remains decision-support intelligence rather than a guaranteed outcome.
 
-### Historical Comparison
+Historical Comparison
 
 Historical demo values are estimated rather than observed measurements.
 
-### Intervention Model
+Intervention Model
 
 Cooling impacts are scenario-based estimates and are not validated causal predictions.
 
-### Vulnerability Model
+Vulnerability Model
 
 Persona sensitivity uses heuristic assumptions rather than individual medical or epidemiological models.
 
-### Environmental Parameter Availability
+Environmental Parameter Availability
 
 The deployed FortyGuard tcm heatmap provides the primary hyperlocal temperature field. Humidity, wet-bulb temperature, and solar radiation are currently aligned Open-Meteo historical contextual values, while heat index is derived from FortyGuard temperature plus contextual humidity. These contextual variables do not have FortyGuard's hyperlocal cell resolution.
 
 These limitations are intentionally disclosed rather than hidden.
 
-# 30. Future Development
+30. Future Development
 
 Future versions of AI HeatShield could include:
-
 
 FortyGuard Environmental Parameters endpoint integration
 
 Real historical heat retrieval
 
-Operational forecast normalization
+Additional forecast validation and calibration
 
 Satellite imagery
 
@@ -1465,39 +1339,37 @@ PDF heat-risk reports
 
 Intervention cost-benefit analysis
 
-
-# 31. Future ML Architecture
+31. Future ML Architecture
 
 A future machine-learning forecasting pipeline could use:
 
-
 Historical Temperature
 
-\+
++
 
 Heat Index
 
-\+
++
 
 Humidity
 
-\+
++
 
 Wet-Bulb Temperature
 
-\+
++
 
 Solar Radiation
 
-\+
++
 
 Time Features
 
-\+
++
 
 Spatial Features
 
-\+
++
 
 Urban Characteristics
 
@@ -1521,9 +1393,7 @@ AI HeatShield Risk Engine
 
 Future Risk Probability
 
-
 Possible models include:
-
 
 XGBoost
 
@@ -1537,23 +1407,21 @@ Temporal Transformer
 
 Spatiotemporal Neural Networks
 
-
 Model selection should depend on available data quality, spatial resolution, forecast horizon, and validation performance.
 
-# 32. Hackathon Demonstration Flow
+32. Hackathon Demonstration Flow
 
 Recommended demo sequence:
 
+1. Open AI HeatShield dashboard
 
-1\. Open AI HeatShield dashboard
-
-2\. Explain that city-wide temperature hides
+2. Explain that city-wide temperature hides
 
    hyperlocal heat differences
 
-3\. Show the spatial heat map
+3. Show the spatial heat map
 
-4\. Switch between:
+4. Switch between:
 
    Risk
 
@@ -1561,25 +1429,25 @@ Recommended demo sequence:
 
    Heat Index
 
-5\. Select a high-risk cell
+5. Select a high-risk cell
 
-6\. Show the risk score
+6. Show the risk score
 
-7\. Explain the primary and secondary drivers
+7. Explain the primary and secondary drivers
 
-8\. Show the priority hotspots
+8. Show the priority hotspots
 
-9\. Show the 12-hour outlook
+9. Show the 12-hour outlook
 
-10\. Show historical comparison
+10. Show historical comparison
 
-11\. Compare population personas
+11. Compare population personas
 
-12\. Show recommended actions
+12. Show recommended actions
 
-13\. Open the intervention simulator
+13. Open the intervention simulator
 
-14\. Compare:
+14. Compare:
 
     Shade
 
@@ -1589,16 +1457,15 @@ Recommended demo sequence:
 
     Combined Cooling
 
-15\. Explain LIVE / DEMO / DEMO_FALLBACK
+15. Explain LIVE / DEMO / DEMO_FALLBACK
 
     transparency
 
-16\. Finish with the core message:
-
+16. Finish with the core message:
 
 AI HeatShield transforms hyperlocal heat data into explainable, actionable urban heat decisions.
 
-# 33. 30-Second Pitch
+33. 30-Second Pitch
 
 Cities already know that extreme heat is dangerous, but city-wide weather readings do not tell decision-makers which street, block, campus area, or outdoor zone requires attention first.
 
@@ -1614,7 +1481,7 @@ AI HeatShield helps decision-makers ask:
 
 "Where should we act first, why, and what could we do about it?"
 
-**# Live Deployment & Verified Hackathon Result
+34. Live Deployment & Verified Hackathon Result
 
 Live dashboard: https://ai-heatshield.vercel.app
 
@@ -1624,38 +1491,31 @@ Production analysis endpoint: https://ai-heatshield.fastapicloud.dev/api/analyze
 
 GitHub: https://github.com/tabbydev01/AI-HeatShield
 
-Verified deployed demo result:
+Verified production result:
 
-FortyGuard source mode: LIVE
+FortyGuard-backed source modes: LIVE / CACHED_LIVE
 
 Analysis location: New York City, New York, USA
 
-FortyGuard heat cells normalized and visualized: 150
+Production spatial granularity: 100 meters
 
-Verified temperature range: 31.89°C – 33.14°C
+A verified production response normalized and visualized 150 valid FortyGuard heat cells for the configured area of interest.
 
-Verified mean temperature: 32.26°C
+Interactive selection updates risk, drivers, hotspots, recommendations, vulnerability, and intervention views without generating a new upstream heatmap for every click because the heatmap is cached.
 
-Interactive selection updates risk, drivers, hotspots, recommendations, vulnerability and intervention views without generating a new upstream heatmap for every click because the heatmap is cached.
+The production architecture keeps FortyGuard temperature as the central spatial signal, uses Open-Meteo for clearly identified environmental context, and separately labels estimated, heuristic, and scenario-based decision-support outputs.
 
-The verified demo uses real FortyGuard historical heatmap data fetched through the live API integration. It should not be described as current real-time weather.
-
-34. Hackathon**
+35. Hackathon
 
 Built for:
 
-
 FortyGuard Hackathon'26
-
 
 Project:
 
-
 AI HeatShield
 
-
 Category:
-
 
 Climate Technology
 
@@ -1665,8 +1525,7 @@ Decision Support
 
 Smart Cities
 
-
-# 35. Final Vision
+36. Final Vision
 
 AI HeatShield is designed around a simple idea:
 
@@ -1674,6 +1533,6 @@ Heat data becomes significantly more valuable when it helps people make better d
 
 The long-term vision is a platform capable of combining hyperlocal environmental intelligence, spatial analytics, forecasting, explainable risk models, population vulnerability, and urban intervention planning into one climate-resilience decision system.
 
-## AI HeatShield
+AI HeatShield
 
-### From Heat Data → Risk Intelligence → Action
+From Heat Data → Risk Intelligence → Action
