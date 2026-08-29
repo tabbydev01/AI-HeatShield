@@ -133,6 +133,10 @@ type SelectedZone = {
 type AnalysisData = {
   project: string;
   mode?: string;
+  refreshing?: boolean;
+  needs_refresh?: boolean;
+  data_generated_at?: string | null;
+  forecast_status?: string;
 
   location: {
     city: string;
@@ -165,15 +169,35 @@ export default function Home() {
   const [lastUpdated, setLastUpdated] =
     useState("");
 
+  const [backgroundRefreshing, setBackgroundRefreshing] =
+    useState(false);
+
   useEffect(() => {
-    loadAnalysis();
+    void initializeDashboard();
   }, []);
+
+  async function initializeDashboard() {
+    const initial = await loadAnalysis(
+      undefined,
+      true,
+    );
+
+    if (initial?.needs_refresh) {
+      void refreshData(
+        initial.selected_zone.tile_id,
+        false,
+      );
+    }
+  }
 
   async function loadAnalysis(
     tileId?: string,
-  ) {
+    showLoading = true,
+  ): Promise<AnalysisData | null> {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
 
       const url = tileId
         ? `${API_BASE_URL}/api/analyze?tile_id=${encodeURIComponent(
@@ -209,6 +233,8 @@ export default function Home() {
           },
         ),
       );
+
+      return result;
     } catch (err) {
       console.error(
         "AI HeatShield API error:",
@@ -218,8 +244,50 @@ export default function Home() {
       setError(
         "Unable to connect to AI HeatShield backend.",
       );
+      return null;
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
+    }
+  }
+
+  async function refreshData(
+    tileId?: string,
+    force = true,
+  ) {
+    if (backgroundRefreshing) {
+      return;
+    }
+
+    setBackgroundRefreshing(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/refresh?force=${force ? "true" : "false"}`,
+        {
+          method: "POST",
+          cache: "no-store",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Refresh request failed with status ${response.status}.`,
+        );
+      }
+
+      await loadAnalysis(
+        tileId,
+        false,
+      );
+    } catch (err) {
+      console.error(
+        "AI HeatShield background refresh error:",
+        err,
+      );
+    } finally {
+      setBackgroundRefreshing(false);
     }
   }
 
@@ -251,7 +319,8 @@ export default function Home() {
       : "DEMO";
 
   const isLive =
-    safeMode === "LIVE";
+    safeMode === "LIVE" ||
+    safeMode === "CACHED_LIVE";
 
   return (
     <main className="min-h-screen bg-transparent text-slate-100">
@@ -262,11 +331,12 @@ export default function Home() {
           mode={safeMode}
           lastUpdated={lastUpdated}
           onRefresh={() =>
-            loadAnalysis(
+            void refreshData(
               zone.tile_id,
+              true,
             )
           }
-          refreshing={loading}
+          refreshing={backgroundRefreshing}
         />
 
         <section className="mt-5 grid gap-5 xl:grid-cols-[1.55fr_0.45fr]">
@@ -452,12 +522,12 @@ export default function Home() {
         {isLive && (
           <div className="mt-3 rounded-xl border border-sky-400/10 bg-sky-400/[0.025] px-4 py-3">
             <p className="text-[10px] leading-5 text-slate-500">
-              Live analysis fuses FortyGuard hyperlocal temperature cells with
-              Open-Meteo historical environmental context for the same NYC
-              location, date and hour. Humidity, wet-bulb temperature and solar
-              radiation are contextual weather-grid values rather than
-              FortyGuard hyperlocal measurements. Heat index is calculated
-              from the fused temperature and humidity inputs.
+              FortyGuard-backed analysis fuses hyperlocal temperature cells with
+              Open-Meteo environmental context aligned to the same NYC location,
+              date and hour. Humidity, wet-bulb temperature and solar radiation
+              are contextual weather-model values rather than FortyGuard hyperlocal
+              measurements. Heat index is calculated from the fused temperature
+              and humidity inputs.
             </p>
           </div>
         )}
@@ -488,6 +558,7 @@ export default function Home() {
             forecast={
               zone.forecast
             }
+            mode={safeMode}
           />
 
           <DecisionPanel
@@ -587,7 +658,17 @@ function TopHeader({
   refreshing: boolean;
 }) {
   const isLive =
-    mode === "LIVE";
+    mode === "LIVE" ||
+    mode === "CACHED_LIVE";
+
+  const modeLabel =
+    mode === "LIVE"
+      ? "Live Data"
+      : mode === "CACHED_LIVE"
+        ? "Cached Live"
+        : mode === "DEMO_FALLBACK"
+          ? "Demo Fallback"
+          : "Demo Mode";
 
   return (
     <header className="rounded-2xl border border-slate-800/70 bg-[#0c1620]/85 px-4 py-4 backdrop-blur-xl md:px-5">
@@ -628,9 +709,9 @@ function TopHeader({
                   }`}
                 />
 
-                {isLive
-                  ? "Live Data"
-                  : "Demo Mode"}
+                {refreshing
+                  ? "Updating Live Data"
+                  : modeLabel}
 
               </span>
 
@@ -704,7 +785,8 @@ function HeroOverview({
     data.selected_zone;
 
   const isLive =
-    mode === "LIVE";
+    mode === "LIVE" ||
+    mode === "CACHED_LIVE";
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-slate-800/70 bg-[#0c1620]/78 p-6 backdrop-blur-xl md:p-7">
@@ -1526,8 +1608,10 @@ function riskBarClass(
 
 function ForecastPanel({
   forecast,
+  mode,
 }: {
   forecast: ForecastPoint[];
+  mode: string;
 }) {
   return (
     <Panel
@@ -1612,11 +1696,9 @@ function ForecastPanel({
       <div className="mt-4 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
 
         <p className="text-[10px] leading-5 text-slate-600">
-          Forecast points are
-          scenario-generated projections for
-          decision-support demonstration; they
-          are not observed future FortyGuard or
-          Open-Meteo measurements.
+          {mode === "LIVE" || mode === "CACHED_LIVE"
+            ? "Future temperature points shown here come from cached FortyGuard forecast heatmaps for +3/+6/+9/+12 hours. Open-Meteo supplies environmental forecast-model context aligned to each hour, and AI HeatShield recalculates the risk score from the nearest future heat cell. Risk scores are AI HeatShield outputs, not FortyGuard risk predictions."
+            : "Future forecast points are unavailable until a successful FortyGuard refresh. The current point remains available from the active dashboard dataset."}
         </p>
 
       </div>
@@ -1884,7 +1966,7 @@ function RiskDriverPanel({
 
       </div>
 
-      {mode === "LIVE" && (
+      {(mode === "LIVE" || mode === "CACHED_LIVE") && (
         <div className="mt-4 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
           <p className="text-[10px] leading-5 text-slate-600">
             Driver contributions use FortyGuard hyperlocal temperature,
@@ -1955,7 +2037,7 @@ function ClimateSummary({
           value={mode}
         />
 
-        {mode === "LIVE" && (
+        {(mode === "LIVE" || mode === "CACHED_LIVE") && (
           <>
             <SummaryRow
               label="Hyperlocal Temperature"
@@ -1976,7 +2058,7 @@ function ClimateSummary({
 
       </div>
 
-      {mode === "LIVE" && (
+      {(mode === "LIVE" || mode === "CACHED_LIVE") && (
         <div className="mt-4 rounded-xl border border-sky-400/10 bg-sky-400/[0.025] px-4 py-3">
           <p className="text-[10px] leading-5 text-slate-600">
             FortyGuard provides the spatial temperature field. Open-Meteo

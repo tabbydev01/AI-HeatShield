@@ -1,108 +1,119 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Query
 
-from app.schemas.analysis import (
-    AnalysisResponse,
-    MapTile,
-    SelectedZoneAnalysis,
-)
+from app.schemas.analysis import AnalysisResponse, MapTile, SelectedZoneAnalysis
 from app.schemas.hotspot import HotspotResult
-
-from app.services.fortyguard_service import fortyguard_service
-from app.services.risk_service import risk_service
-from app.services.recommendation_service import recommendation_service
-from app.services.intervention_service import intervention_service
 from app.services.forecast_service import forecast_service
+from app.services.fortyguard_service import fortyguard_service
 from app.services.historical_service import historical_service
+from app.services.intervention_service import intervention_service
+from app.services.recommendation_service import recommendation_service
+from app.services.risk_service import risk_service
 from app.services.vulnerability_service import vulnerability_service
 
 
-router = APIRouter(
-    prefix="/api",
-    tags=["AI HeatShield"],
-)
+router = APIRouter(prefix="/api")
 
-
-# ================================================================
-# HEALTH CHECK
-# ================================================================
 
 @router.get("/health")
-async def health():
+def health() -> dict:
     return {
-        "status": "ok",
-        "service": "AI HeatShield API",
-        "data_source": fortyguard_service.get_source(),
+        "status": "healthy",
+        "source": fortyguard_service.get_source(),
+        "refreshing": fortyguard_service.is_refreshing(),
+        "needs_refresh": fortyguard_service.needs_refresh(),
     }
 
 
-# ================================================================
-# MAIN ANALYSIS ENDPOINT
-# ================================================================
-
-@router.get(
-    "/analyze",
-    response_model=AnalysisResponse,
-)
+@router.get("/analyze", response_model=AnalysisResponse)
 async def analyze(
-    tile_id: str | None = None,
-):
+    tile_id: str | None = Query(default=None),
+) -> AnalysisResponse:
     """
-    Complete AI HeatShield analysis.
+    Fast read endpoint.
 
-    Returns:
-    - heat map
-    - heat risk
-    - hotspots
-    - explainable risk factors
-    - recommendations
-    - intervention simulations
-    - 12-hour forecast
-    - historical comparison
-    - persona vulnerability analysis
-
-    Data source:
-    LIVE
-    DEMO
-    DEMO_FALLBACK
+    This endpoint never starts a new FortyGuard or Open-Meteo network request.
+    It analyzes the newest RAM/persisted snapshot, so initial dashboard reads,
+    heat-cell selection and hotspot selection remain fast.
     """
-
-    # ============================================================
-    # LOAD HEATMAP
-    # ============================================================
-
-    try:
-        heatmap = await fortyguard_service.get_heatmap()
-
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Unable to load heatmap data: "
-                f"{exc}"
-            ),
-        ) from exc
+    heatmap = fortyguard_service.get_cached_heatmap()
 
     if not heatmap.tiles:
-        raise HTTPException(
-            status_code=500,
-            detail="Heatmap contains no tiles.",
+        raise RuntimeError("No heatmap tiles are available for analysis.")
+
+    # Calculate risk once for every tile and reuse the result throughout the
+    # response. This avoids repeated risk calculations for map/hotspot logic.
+    risk_by_tile = {
+        tile.id: risk_service.calculate_risk(tile)
+        for tile in heatmap.tiles
+    }
+
+    # Use the requested tile when valid. Otherwise default to the highest-risk
+    # tile so the dashboard always has a meaningful selected zone.
+    selected_tile = None
+
+    if tile_id:
+        selected_tile = next(
+            (
+                tile
+                for tile in heatmap.tiles
+                if tile.id == tile_id
+            ),
+            None,
         )
 
-    # ============================================================
-    # ANALYZE EVERY TILE
-    # ============================================================
-
-    analyzed_tiles: list[MapTile] = []
-
-    tile_lookup: dict[str, dict] = {}
-
-    for tile in heatmap.tiles:
-
-        risk = risk_service.calculate_risk(
-            tile
+    if selected_tile is None:
+        selected_tile = max(
+            heatmap.tiles,
+            key=lambda tile: risk_by_tile[tile.id].risk_score,
         )
 
-        map_tile = MapTile(
+    selected_risk = risk_by_tile[selected_tile.id]
+
+    # All services below are local/cached computations. They do not create a
+    # new FortyGuard job from this endpoint.
+    recommendation_result = recommendation_service.generate(
+        selected_tile
+    )
+    intervention_result = intervention_service.simulate(
+        selected_tile
+    )
+    historical_result = historical_service.compare(
+        selected_tile
+    )
+    vulnerability_result = vulnerability_service.analyze(
+        selected_tile
+    )
+    forecast_result = await forecast_service.generate_forecast(
+        selected_tile
+    )
+
+    ranked_tiles = sorted(
+        heatmap.tiles,
+        key=lambda tile: risk_by_tile[tile.id].risk_score,
+        reverse=True,
+    )
+
+    # HotspotResult requires the explainable factor list as part of its
+    # Pydantic schema. Reuse the already-calculated risk factors here.
+    hotspots = [
+        HotspotResult(
+            rank=index,
+            tile_id=tile.id,
+            latitude=tile.latitude,
+            longitude=tile.longitude,
+            temperature=tile.temperature,
+            risk_score=risk_by_tile[tile.id].risk_score,
+            risk_level=risk_by_tile[tile.id].risk_level,
+            factors=risk_by_tile[tile.id].factors,
+        )
+        for index, tile in enumerate(
+            ranked_tiles[:3],
+            start=1,
+        )
+    ]
+
+    map_tiles = [
+        MapTile(
             tile_id=tile.id,
             latitude=tile.latitude,
             longitude=tile.longitude,
@@ -111,259 +122,63 @@ async def analyze(
             heat_index=tile.heat_index,
             wet_bulb=tile.wet_bulb,
             solar_radiation=tile.solar_radiation,
-            risk_score=risk.risk_score,
-            risk_level=risk.risk_level,
+            risk_score=risk_by_tile[tile.id].risk_score,
+            risk_level=risk_by_tile[tile.id].risk_level,
         )
-
-        analyzed_tiles.append(
-            map_tile
-        )
-
-        tile_lookup[
-            tile.id
-        ] = {
-            "tile": tile,
-            "risk": risk,
-            "map_tile": map_tile,
-        }
-
-    # ============================================================
-    # SELECT ACTIVE TILE
-    # ============================================================
-
-    selected_id = tile_id
-
-    if (
-        not selected_id
-        or selected_id not in tile_lookup
-    ):
-        highest_risk_tile = max(
-            analyzed_tiles,
-            key=lambda item: item.risk_score,
-        )
-
-        selected_id = (
-            highest_risk_tile.tile_id
-        )
-
-    selected_entry = (
-        tile_lookup[selected_id]
-    )
-
-    selected_tile = (
-        selected_entry["tile"]
-    )
-
-    selected_risk = (
-        selected_entry["risk"]
-    )
-
-    # ============================================================
-    # RISK DRIVERS
-    # ============================================================
-
-    sorted_factors = sorted(
-        selected_risk.factors,
-        key=lambda factor: factor.contribution,
-        reverse=True,
-    )
-
-    primary_driver = (
-        sorted_factors[0].name
-        if len(sorted_factors) >= 1
-        else "Unknown"
-    )
-
-    secondary_driver = (
-        sorted_factors[1].name
-        if len(sorted_factors) >= 2
-        else "Unknown"
-    )
-
-    # ============================================================
-    # HOTSPOTS
-    # ============================================================
-
-    sorted_entries = sorted(
-        tile_lookup.values(),
-        key=lambda entry: (
-            entry["risk"].risk_score
-        ),
-        reverse=True,
-    )
-
-    top_entries = (
-        sorted_entries[:3]
-    )
-
-    hotspots: list[
-        HotspotResult
-    ] = []
-
-    for index, entry in enumerate(
-        top_entries
-    ):
-
-        hotspot_tile = (
-            entry["tile"]
-        )
-
-        hotspot_risk = (
-            entry["risk"]
-        )
-
-        hotspots.append(
-            HotspotResult(
-                rank=index + 1,
-
-                tile_id=hotspot_tile.id,
-
-                latitude=hotspot_tile.latitude,
-
-                longitude=hotspot_tile.longitude,
-
-                temperature=hotspot_tile.temperature,
-
-                risk_score=hotspot_risk.risk_score,
-
-                risk_level=hotspot_risk.risk_level,
-
-                factors=hotspot_risk.factors,
-            )
-        )
-
-    # ============================================================
-    # RECOMMENDATIONS
-    # ============================================================
-
-    recommendation_response = (
-        recommendation_service.generate(
-            selected_tile
-        )
-    )
-
-    recommendations = (
-        recommendation_response.recommendations
-    )
-
-    # ============================================================
-    # INTERVENTION SIMULATION
-    # ============================================================
-
-    intervention_response = (
-        intervention_service.simulate(
-            selected_tile
-        )
-    )
-
-    interventions = (
-        intervention_response.simulations
-    )
-
-    # ============================================================
-    # FORECAST
-    # ============================================================
-
-    forecast_response = (
-        forecast_service.generate_forecast(
-            selected_tile
-        )
-    )
-
-    forecast = (
-        forecast_response.forecast
-    )
-
-    # ============================================================
-    # HISTORICAL COMPARISON
-    # ============================================================
-
-    historical = (
-        historical_service.compare(
-            selected_tile
-        )
-    )
-
-    # ============================================================
-    # PERSONA / VULNERABILITY INTELLIGENCE
-    # ============================================================
-
-    vulnerability = (
-        vulnerability_service.analyze(
-            selected_tile
-        )
-    )
-
-    # ============================================================
-    # BUILD SELECTED ZONE RESPONSE
-    # ============================================================
-
-    selected_zone = (
-        SelectedZoneAnalysis(
-            tile_id=selected_tile.id,
-
-            latitude=selected_tile.latitude,
-
-            longitude=selected_tile.longitude,
-
-            temperature=selected_tile.temperature,
-
-            humidity=selected_tile.humidity,
-
-            heat_index=selected_tile.heat_index,
-
-            wet_bulb=selected_tile.wet_bulb,
-
-            solar_radiation=selected_tile.solar_radiation,
-
-            risk_score=selected_risk.risk_score,
-
-            risk_level=selected_risk.risk_level,
-
-            primary_driver=primary_driver,
-
-            secondary_driver=secondary_driver,
-
-            factors=selected_risk.factors,
-
-            recommendations=recommendations,
-
-            interventions=interventions,
-
-            forecast=forecast,
-
-            historical=historical,
-
-            vulnerability=vulnerability,
-        )
-    )
-
-    # ============================================================
-    # ACTUAL DATA SOURCE
-    # ============================================================
-
-    actual_source = (
-        fortyguard_service.get_source()
-    )
-
-    # ============================================================
-    # FINAL RESPONSE
-    # ============================================================
+        for tile in heatmap.tiles
+    ]
 
     return AnalysisResponse(
         project="AI HeatShield",
-
-        mode=actual_source,
-
+        mode=fortyguard_service.get_source(),
         location=heatmap.location,
-
-        statistics=(
-            heatmap.statistics.model_dump()
+        statistics=heatmap.statistics.model_dump(),
+        refreshing=fortyguard_service.is_refreshing(),
+        needs_refresh=fortyguard_service.needs_refresh(),
+        data_generated_at=fortyguard_service.get_data_generated_at(),
+        forecast_status=fortyguard_service.get_forecast_status(),
+        selected_zone=SelectedZoneAnalysis(
+            tile_id=selected_tile.id,
+            latitude=selected_tile.latitude,
+            longitude=selected_tile.longitude,
+            temperature=selected_tile.temperature,
+            humidity=selected_tile.humidity,
+            heat_index=selected_tile.heat_index,
+            wet_bulb=selected_tile.wet_bulb,
+            solar_radiation=selected_tile.solar_radiation,
+            risk_score=selected_risk.risk_score,
+            risk_level=selected_risk.risk_level,
+            primary_driver=recommendation_result.primary_driver,
+            secondary_driver=recommendation_result.secondary_driver,
+            factors=selected_risk.factors,
+            recommendations=recommendation_result.recommendations,
+            interventions=intervention_result.simulations,
+            forecast=forecast_result.forecast,
+            historical=historical_result,
+            vulnerability=vulnerability_result,
         ),
-
-        selected_zone=selected_zone,
-
-        map_tiles=analyzed_tiles,
-
+        map_tiles=map_tiles,
         hotspots=hotspots,
     )
+
+
+@router.post("/refresh")
+async def refresh(
+    force: bool = Query(default=False),
+) -> dict:
+    """
+    Explicit slow refresh endpoint.
+
+    The dashboard can remain visible while the browser waits for this request.
+    FortyGuardService internally deduplicates simultaneous refresh attempts.
+    """
+    result = await fortyguard_service.refresh_all(
+        force=force
+    )
+
+    return {
+        **result,
+        "needs_refresh": fortyguard_service.needs_refresh(),
+        "forecast_status": fortyguard_service.get_forecast_status(),
+        "data_generated_at": fortyguard_service.get_data_generated_at(),
+    }

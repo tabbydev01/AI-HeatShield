@@ -53,7 +53,13 @@ class AnalysisResponse(BaseModel):
     location: dict
     statistics: dict
 
-    selected_zone: SelectedZoneAnalysis
+    # Fast-first cache/refresh metadata. Optional defaults preserve backwards
+    # compatibility with any older frontend or saved API response.
+    refreshing: bool = False
+    needs_refresh: bool = False
+    data_generated_at: str | None = None
+    forecast_status: str = "UNAVAILABLE"
 
+    selected_zone: SelectedZoneAnalysis
     map_tiles: list[MapTile]
     hotspots: list[HotspotResult]

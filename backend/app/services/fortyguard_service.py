@@ -1,333 +1,457 @@
+from __future__ import annotations
+
 import asyncio
 import json
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 
 from app.config import settings
+from app.schemas.heatmap import HeatTile, HeatmapResponse, HeatmapStatistics
 from app.services.weather_service import weather_service
-from app.schemas.heatmap import (
-    HeatTile,
-    HeatmapResponse,
-    HeatmapStatistics,
-)
 
 
 class FortyGuardService:
     """
-    FortyGuard data adapter for AI HeatShield.
+    Fast-first FortyGuard adapter for AI HeatShield.
 
-    Data source modes:
-    - LIVE          -> Real FortyGuard response
-    - DEMO          -> Synthetic local demonstration dataset
-    - DEMO_FALLBACK -> Live API was attempted but failed,
-                       therefore synthetic demo data was returned
+    The read path never waits for FortyGuard. `/api/analyze` serves the newest
+    already-available dataset from RAM or the persisted last-known-good cache.
+    Network refreshes happen only through the explicit refresh path.
 
-    The service also caches the latest heatmap so clicking multiple
-    map cells does not create a new FortyGuard API task each time.
+    Source modes:
+    - LIVE          fresh FortyGuard data fetched during this process
+    - CACHED_LIVE   persisted/stale last-known-good FortyGuard data
+    - DEMO          intentional demo mode (no API key or DEMO_MODE=true)
+    - DEMO_FALLBACK no real cache exists yet and the live refresh failed
     """
 
-    CACHE_TTL_SECONDS = 15 * 60
-
+    CURRENT_CACHE_TTL_SECONDS = 15 * 60
+    FORECAST_CACHE_TTL_SECONDS = 60 * 60
     MAX_STATUS_ATTEMPTS = 60
-    STATUS_POLL_INTERVAL_SECONDS = 3
+    INITIAL_STATUS_POLL_SECONDS = 3
+    MAX_STATUS_POLL_SECONDS = 12
+    FORECAST_HORIZONS = (3, 6, 9, 12)
+    FORECAST_CONCURRENCY = 2
 
     def __init__(self) -> None:
         self.base_url = settings.fortyguard_base_url.rstrip("/")
-
-        self.api_key = (
-            settings.fortyguard_api_key.strip()
-            if settings.fortyguard_api_key
-            else ""
-        )
-
+        self.api_key = settings.fortyguard_api_key.strip() if settings.fortyguard_api_key else ""
         self.force_demo_mode = bool(settings.demo_mode)
+        self.demo_mode = self.force_demo_mode or not self.api_key
 
-        self.demo_mode = (
-            self.force_demo_mode
-            or not self.api_key
-        )
-
-        self.last_source = (
-            "DEMO"
-            if self.demo_mode
-            else "LIVE"
-        )
-
+        self.last_source = "DEMO" if self.demo_mode else "DEMO_FALLBACK"
         self.last_error: str | None = None
 
         self._cache: HeatmapResponse | None = None
-        self._cache_created_at: float | None = None
         self._cache_source: str | None = None
+        self._cache_saved_at_utc: datetime | None = None
+        self._cache_created_monotonic: float | None = None
 
-        self._request_lock = asyncio.Lock()
+        self._forecast_cache: dict[int, HeatmapResponse] = {}
+        self._forecast_base_time: datetime | None = None
+        self._forecast_saved_at_utc: datetime | None = None
 
-        self.demo_file = (
-            Path(__file__).resolve().parents[2]
-            / "demo_data"
-            / "phoenix_heatmap.json"
-        )
+        self._refresh_lock = asyncio.Lock()
+        self._is_refreshing = False
 
-    # ============================================================
-    # PUBLIC METHODS
-    # ============================================================
+        backend_root = Path(__file__).resolve().parents[2]
+        self.demo_file = backend_root / "demo_data" / "phoenix_heatmap.json"
+        self.cache_file = backend_root / "data" / "heatshield_live_cache.json"
 
-    async def get_heatmap(
-        self,
-        force_refresh: bool = False,
-    ) -> HeatmapResponse:
-        """
-        Return the latest heatmap.
+        self._load_persisted_cache_safely()
 
-        Important:
-        - Cached data is reused for 15 minutes.
-        - Demo mode never contacts FortyGuard.
-        - Live failures automatically fall back to demo data.
-        - last_source tells the API/UI exactly where data came from.
-        """
+    # ------------------------------------------------------------------
+    # FAST READ PATH
+    # ------------------------------------------------------------------
 
-        if (
-            not force_refresh
-            and self._cache_is_valid()
-        ):
-            self.last_source = (
-                self._cache_source
-                or "DEMO"
-            )
+    async def get_heatmap(self, force_refresh: bool = False) -> HeatmapResponse:
+        """Compatibility wrapper. Normal reads are fast; forced reads refresh."""
+        if force_refresh:
+            await self.refresh_all(force=True)
+        return self.get_cached_heatmap()
 
-            return self._cache  # type: ignore[return-value]
-
-        async with self._request_lock:
-
-            # Another request may have populated cache while
-            # this request was waiting for the lock.
-            if (
-                not force_refresh
-                and self._cache_is_valid()
-            ):
-                self.last_source = (
-                    self._cache_source
-                    or "DEMO"
-                )
-
-                return self._cache  # type: ignore[return-value]
-
-            # ----------------------------------------------------
-            # DEMO MODE
-            # ----------------------------------------------------
-
-            if self.demo_mode:
-                result = self._load_demo_heatmap()
-
-                self.last_source = "DEMO"
-                self.last_error = None
-
-                self._store_cache(
-                    result,
-                    "DEMO",
-                )
-
-                return result
-
-            # ----------------------------------------------------
-            # LIVE MODE
-            # ----------------------------------------------------
-
-            try:
-                result = await self._get_live_heatmap()
-
+    def get_cached_heatmap(self) -> HeatmapResponse:
+        """Return the best immediately available heatmap without network I/O."""
+        if self._cache is not None:
+            if self._cache_source == "LIVE" and self._current_cache_is_fresh():
                 self.last_source = "LIVE"
-                self.last_error = None
+            elif self._cache_source in {"LIVE", "CACHED_LIVE"}:
+                self.last_source = "CACHED_LIVE"
+            else:
+                self.last_source = self._cache_source or "DEMO_FALLBACK"
+            return self._cache
 
-                self._store_cache(
-                    result,
-                    "LIVE",
-                )
+        demo = self._load_demo_heatmap()
+        self.last_source = "DEMO" if self.demo_mode else "DEMO_FALLBACK"
+        return demo
 
-                return result
-
-            except Exception as exc:
-                self.last_error = str(exc)
-
-                print(
-                    "[AI HeatShield] FortyGuard live request failed. "
-                    f"Using demo fallback. Error: {exc}"
-                )
-
-                result = self._load_demo_heatmap()
-
-                self.last_source = "DEMO_FALLBACK"
-
-                # Do not cache a failed live request. This allows the
-                # next request to retry FortyGuard immediately instead of
-                # serving a 15-minute DEMO_FALLBACK cache.
-                return result
+    def get_cached_forecast_heatmaps(self) -> dict[int, HeatmapResponse]:
+        """Return cached future heatmaps only while their base time is still useful."""
+        if not self._forecast_cache:
+            return {}
+        if not self._forecast_cache_is_usable():
+            return {}
+        return dict(self._forecast_cache)
 
     def get_source(self) -> str:
-        """
-        Returns the actual source of the currently served data.
-        """
-
         return self.last_source
 
-    def clear_cache(self) -> None:
-        """
-        Clear the heatmap cache manually.
-        """
+    def is_refreshing(self) -> bool:
+        return self._is_refreshing
 
+    def needs_refresh(self) -> bool:
+        if self.demo_mode:
+            return False
+        if self._cache is None:
+            return True
+        return not self._current_cache_is_fresh()
+
+    def get_data_generated_at(self) -> str | None:
+        if self._cache is not None:
+            return self._cache.generated_at
+        return None
+
+    def get_forecast_status(self) -> str:
+        if not self._forecast_cache:
+            return "UNAVAILABLE"
+        if self._forecast_cache_is_usable():
+            return "READY"
+        return "STALE"
+
+    def clear_cache(self, include_persisted: bool = False) -> None:
         self._cache = None
-        self._cache_created_at = None
         self._cache_source = None
+        self._cache_saved_at_utc = None
+        self._cache_created_monotonic = None
+        self._forecast_cache = {}
+        self._forecast_base_time = None
+        self._forecast_saved_at_utc = None
 
-    # ============================================================
-    # CACHE
-    # ============================================================
+        if include_persisted:
+            try:
+                if self.cache_file.exists():
+                    self.cache_file.unlink()
+            except OSError:
+                pass
 
-    def _cache_is_valid(self) -> bool:
+    # ------------------------------------------------------------------
+    # EXPLICIT NETWORK REFRESH PATH
+    # ------------------------------------------------------------------
+
+    async def refresh_all(self, force: bool = False) -> dict[str, Any]:
+        """
+        Refresh current FortyGuard data and +3/+6/+9/+12 forecasts.
+
+        This method may take tens of seconds because FortyGuard heatmaps are
+        asynchronous jobs. It is intentionally separated from `/api/analyze`.
+        """
+        if self.demo_mode:
+            demo = self._load_demo_heatmap()
+            self._store_current_cache(demo, "DEMO")
+            self.last_source = "DEMO"
+            self.last_error = None
+            return {
+                "ok": True,
+                "mode": "DEMO",
+                "refreshed": False,
+                "forecast_horizons": [],
+            }
+
+        if not force and self._current_cache_is_fresh() and self._forecast_cache_is_usable():
+            return {
+                "ok": True,
+                "mode": self.get_source(),
+                "refreshed": False,
+                "forecast_horizons": sorted(self._forecast_cache),
+            }
+
+        async with self._refresh_lock:
+            # Another request may have refreshed while we waited.
+            if not force and self._current_cache_is_fresh() and self._forecast_cache_is_usable():
+                return {
+                    "ok": True,
+                    "mode": self.get_source(),
+                    "refreshed": False,
+                    "forecast_horizons": sorted(self._forecast_cache),
+                }
+
+            self._is_refreshing = True
+            try:
+                base_time = self._current_nyc_hour()
+                target_times = [base_time] + [
+                    base_time + timedelta(hours=hours)
+                    for hours in self.FORECAST_HORIZONS
+                ]
+
+                environmental_contexts: dict[datetime, dict[str, Any]] = {}
+                try:
+                    environmental_contexts = await weather_service.get_environmental_batch(
+                        target_times,
+                        latitude=40.712336,
+                        longitude=-74.010329,
+                        force_refresh=force,
+                    )
+                except Exception as exc:
+                    # FortyGuard temperature remains usable without context.
+                    print(
+                        "[AI HeatShield] Open-Meteo batch context unavailable. "
+                        f"Continuing with FortyGuard temperature only. Error: {exc}"
+                    )
+
+                try:
+                    current = await self._fetch_heatmap_for_time(
+                        base_time,
+                        environmental_contexts.get(base_time),
+                    )
+                except Exception as exc:
+                    self.last_error = str(exc)
+                    if self._cache is not None and self._cache_source in {"LIVE", "CACHED_LIVE"}:
+                        self.last_source = "CACHED_LIVE"
+                        return {
+                            "ok": False,
+                            "mode": "CACHED_LIVE",
+                            "refreshed": False,
+                            "error": self.last_error,
+                            "forecast_horizons": sorted(self.get_cached_forecast_heatmaps()),
+                        }
+
+                    self.last_source = "DEMO_FALLBACK"
+                    return {
+                        "ok": False,
+                        "mode": "DEMO_FALLBACK",
+                        "refreshed": False,
+                        "error": self.last_error,
+                        "forecast_horizons": [],
+                    }
+
+                self._store_current_cache(current, "LIVE")
+                self.last_source = "LIVE"
+                self.last_error = None
+                # Persist the current snapshot immediately; forecast failure must
+                # never discard a successful real current heatmap.
+                self._persist_cache_safely()
+
+                forecast_results = await self._refresh_forecasts(
+                    base_time=base_time,
+                    environmental_contexts=environmental_contexts,
+                )
+
+                self._forecast_cache = forecast_results
+                self._forecast_base_time = base_time
+                self._forecast_saved_at_utc = datetime.now(timezone.utc)
+                self._persist_cache_safely()
+
+                return {
+                    "ok": True,
+                    "mode": "LIVE",
+                    "refreshed": True,
+                    "forecast_horizons": sorted(forecast_results),
+                }
+            finally:
+                self._is_refreshing = False
+
+    async def _refresh_forecasts(
+        self,
+        base_time: datetime,
+        environmental_contexts: dict[datetime, dict[str, Any]],
+    ) -> dict[int, HeatmapResponse]:
+        semaphore = asyncio.Semaphore(self.FORECAST_CONCURRENCY)
+
+        async def fetch_one(hours: int) -> tuple[int, HeatmapResponse | None]:
+            target_time = base_time + timedelta(hours=hours)
+            async with semaphore:
+                try:
+                    heatmap = await self._fetch_heatmap_for_time(
+                        target_time,
+                        environmental_contexts.get(target_time),
+                    )
+                    return hours, heatmap
+                except Exception as exc:
+                    print(
+                        "[AI HeatShield] FortyGuard forecast request failed "
+                        f"for +{hours}h. Error: {exc}"
+                    )
+                    return hours, None
+
+        pairs = await asyncio.gather(
+            *(fetch_one(hours) for hours in self.FORECAST_HORIZONS)
+        )
+        return {
+            hours: heatmap
+            for hours, heatmap in pairs
+            if heatmap is not None
+        }
+
+    async def get_forecast_heatmaps(
+        self,
+        horizons: tuple[int, ...] = FORECAST_HORIZONS,
+    ) -> dict[int, HeatmapResponse]:
+        """Compatibility method: returns cached forecasts, never starts jobs."""
+        cached = self.get_cached_forecast_heatmaps()
+        return {hours: cached[hours] for hours in horizons if hours in cached}
+
+    # ------------------------------------------------------------------
+    # CACHE + PERSISTENCE
+    # ------------------------------------------------------------------
+
+    def _store_current_cache(self, heatmap: HeatmapResponse, source: str) -> None:
+        self._cache = heatmap
+        self._cache_source = source
+        self._cache_saved_at_utc = datetime.now(timezone.utc)
+        self._cache_created_monotonic = time.monotonic()
+
+    def _current_cache_is_fresh(self) -> bool:
         if self._cache is None:
             return False
 
-        if self._cache_created_at is None:
-            return False
-
-        age_seconds = (
-            time.monotonic()
-            - self._cache_created_at
-        )
-
-        return (
-            age_seconds
-            < self.CACHE_TTL_SECONDS
-        )
-
-    def _store_cache(
-        self,
-        heatmap: HeatmapResponse,
-        source: str,
-    ) -> None:
-        self._cache = heatmap
-        self._cache_created_at = time.monotonic()
-        self._cache_source = source
-
-    # ============================================================
-    # LIVE FORTYGUARD API
-    # ============================================================
-
-    async def _get_live_heatmap(
-        self,
-    ) -> HeatmapResponse:
-        if not self.api_key:
-            raise RuntimeError(
-                "FortyGuard API key is missing."
+        if self._cache_created_monotonic is not None:
+            return (
+                time.monotonic() - self._cache_created_monotonic
+                < self.CURRENT_CACHE_TTL_SECONDS
             )
 
-        payload = self._build_heatmap_payload()
+        if self._cache_saved_at_utc is None:
+            return False
 
+        return (
+            datetime.now(timezone.utc) - self._cache_saved_at_utc
+        ).total_seconds() < self.CURRENT_CACHE_TTL_SECONDS
+
+    def _forecast_cache_is_usable(self) -> bool:
+        if not self._forecast_cache or self._forecast_base_time is None:
+            return False
+
+        now_nyc = self._current_nyc_hour()
+        age = abs((now_nyc - self._forecast_base_time).total_seconds())
+        return age < self.FORECAST_CACHE_TTL_SECONDS
+
+    def _persist_cache_safely(self) -> None:
+        if self._cache is None or self._cache_source not in {"LIVE", "CACHED_LIVE"}:
+            return
+
+        payload: dict[str, Any] = {
+            "version": 1,
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+            "current": self._cache.model_dump(mode="json"),
+            "forecast_base_time": (
+                self._forecast_base_time.isoformat()
+                if self._forecast_base_time is not None
+                else None
+            ),
+            "forecasts": {
+                str(hours): heatmap.model_dump(mode="json")
+                for hours, heatmap in self._forecast_cache.items()
+            },
+        }
+
+        try:
+            self.cache_file.parent.mkdir(parents=True, exist_ok=True)
+            temp_file = self.cache_file.with_suffix(".tmp")
+            temp_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            temp_file.replace(self.cache_file)
+        except OSError as exc:
+            # Some serverless filesystems may be read-only/ephemeral. RAM cache
+            # still works, so persistence failure must not break the API.
+            print(f"[AI HeatShield] Could not persist live cache: {exc}")
+
+    def _load_persisted_cache_safely(self) -> None:
+        if self.demo_mode or not self.cache_file.exists():
+            return
+
+        try:
+            raw = json.loads(self.cache_file.read_text(encoding="utf-8"))
+            current_raw = raw.get("current")
+            if not isinstance(current_raw, dict):
+                return
+
+            self._cache = HeatmapResponse.model_validate(current_raw)
+            self._cache_source = "CACHED_LIVE"
+
+            saved_at_raw = raw.get("saved_at")
+            if isinstance(saved_at_raw, str):
+                parsed = datetime.fromisoformat(saved_at_raw.replace("Z", "+00:00"))
+                self._cache_saved_at_utc = (
+                    parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
+                )
+
+            base_raw = raw.get("forecast_base_time")
+            if isinstance(base_raw, str):
+                self._forecast_base_time = datetime.fromisoformat(base_raw)
+
+            forecasts_raw = raw.get("forecasts", {})
+            if isinstance(forecasts_raw, dict):
+                for key, value in forecasts_raw.items():
+                    try:
+                        hours = int(key)
+                        if isinstance(value, dict):
+                            self._forecast_cache[hours] = HeatmapResponse.model_validate(value)
+                    except (TypeError, ValueError):
+                        continue
+
+            self.last_source = "CACHED_LIVE"
+        except Exception as exc:
+            print(f"[AI HeatShield] Ignoring invalid persisted cache: {exc}")
+            self._cache = None
+            self._cache_source = None
+            self._forecast_cache = {}
+            self._forecast_base_time = None
+
+    # ------------------------------------------------------------------
+    # FORTYGUARD NETWORK
+    # ------------------------------------------------------------------
+
+    async def _fetch_heatmap_for_time(
+        self,
+        target_time: datetime,
+        environmental_data: dict[str, Any] | None = None,
+    ) -> HeatmapResponse:
+        if not self.api_key:
+            raise RuntimeError("FortyGuard API key is missing.")
+
+        payload = self._build_heatmap_payload(target_time)
         headers = {
             "api-key": self.api_key,
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+        timeout = httpx.Timeout(connect=20.0, read=60.0, write=30.0, pool=30.0)
 
-        timeout = httpx.Timeout(
-            connect=20.0,
-            read=60.0,
-            write=30.0,
-            pool=30.0,
-        )
-
-        async with httpx.AsyncClient(
-            timeout=timeout,
-        ) as client:
-
-            submit_response = await client.post(
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(
                 f"{self.base_url}/v1/heatmap",
                 headers=headers,
                 json=payload,
             )
-
-            if submit_response.status_code >= 400:
+            if response.status_code >= 400:
                 raise RuntimeError(
                     "FortyGuard heatmap request failed "
-                    f"with HTTP {submit_response.status_code}: "
-                    f"{submit_response.text[:500]}"
+                    f"with HTTP {response.status_code}: {response.text[:500]}"
                 )
 
             try:
-                submit_data = submit_response.json()
-
+                submit_data = response.json()
             except ValueError as exc:
-                raise RuntimeError(
-                    "FortyGuard returned invalid JSON "
-                    "while submitting heatmap request."
-                ) from exc
+                raise RuntimeError("FortyGuard returned invalid JSON on submit.") from exc
 
-            activity_id = self._extract_activity_id(
-                submit_data
-            )
-
+            activity_id = self._extract_activity_id(submit_data)
             if not activity_id:
-                # Some APIs may return completed data directly.
-                if self._contains_heatmap_data(
-                    submit_data
-                ):
-                    environmental_data = await self._get_environmental_context()
-
+                if self._contains_heatmap_data(submit_data):
                     return self._normalize_live_response(
                         submit_data,
                         environmental_data=environmental_data,
                     )
+                raise RuntimeError("FortyGuard response did not contain an activity_id.")
 
-                raise RuntimeError(
-                    "FortyGuard response did not contain "
-                    "an activity_id."
-                )
-
-            completed_data = await self._poll_activity(
-                client=client,
-                headers=headers,
-                activity_id=activity_id,
-            )
-
-            environmental_data = await self._get_environmental_context()
-
+            completed = await self._poll_activity(client, headers, activity_id)
             return self._normalize_live_response(
-                completed_data,
+                completed,
                 environmental_data=environmental_data,
             )
-
-    async def _get_environmental_context(
-        self,
-    ) -> dict[str, Any]:
-        """
-        Fetch environmental context aligned with the deterministic
-        FortyGuard NYC historical request.
-
-        FortyGuard remains the source of every tile's hyperlocal
-        temperature. Open-Meteo supplies contextual humidity,
-        wet-bulb temperature and solar radiation for the same
-        location/date/hour.
-
-        If Open-Meteo is temporarily unavailable, FortyGuard data
-        still remains usable and the legacy placeholders are retained.
-        """
-
-        try:
-            return await weather_service.get_environmental_data(
-                latitude=40.712336,
-                longitude=-74.010329,
-                date="2024-07-15",
-                hour=14,
-            )
-        except Exception as exc:
-            print(
-                "[AI HeatShield] Open-Meteo environmental context "
-                f"unavailable. Continuing with FortyGuard only. Error: {exc}"
-            )
-            return {}
 
     async def _poll_activity(
         self,
@@ -335,161 +459,92 @@ class FortyGuardService:
         headers: dict[str, str],
         activity_id: str,
     ) -> dict[str, Any]:
-        """
-        Poll FortyGuard asynchronous activity until completion.
-
-        A temporary 404 is tolerated because the activity may not
-        be immediately visible after submission.
-        """
-
-        status_url = (
-            f"{self.base_url}/v1/status/{activity_id}"
-        )
-
+        status_url = f"{self.base_url}/v1/status/{activity_id}"
+        delay = self.INITIAL_STATUS_POLL_SECONDS
         last_status = "UNKNOWN"
 
-        for attempt in range(
-            self.MAX_STATUS_ATTEMPTS
-        ):
-            response = await client.get(
-                status_url,
-                headers=headers,
-            )
+        for _ in range(self.MAX_STATUS_ATTEMPTS):
+            response = await client.get(status_url, headers=headers)
 
-            # Newly created activity may briefly return 404.
-            if response.status_code == 404:
-                await asyncio.sleep(
-                    self.STATUS_POLL_INTERVAL_SECONDS
-                )
-
-                continue
-
-            if response.status_code == 429:
-                await asyncio.sleep(
-                    self.STATUS_POLL_INTERVAL_SECONDS
-                    * 2
-                )
-
+            if response.status_code in {404, 429}:
+                await asyncio.sleep(delay)
+                delay = min(delay * 2, self.MAX_STATUS_POLL_SECONDS)
                 continue
 
             if response.status_code >= 400:
                 raise RuntimeError(
                     "FortyGuard status request failed "
-                    f"with HTTP {response.status_code}: "
-                    f"{response.text[:500]}"
+                    f"with HTTP {response.status_code}: {response.text[:500]}"
                 )
 
             try:
                 data = response.json()
-
             except ValueError as exc:
-                raise RuntimeError(
-                    "FortyGuard status endpoint "
-                    "returned invalid JSON."
-                ) from exc
+                raise RuntimeError("FortyGuard status endpoint returned invalid JSON.") from exc
 
-            status = self._extract_status(
-                data
-            )
-
+            status = self._extract_status(data)
             last_status = status
+            normalized = status.strip().upper().replace(" ", "_")
 
-            normalized_status = (
-                status.strip()
-                .upper()
-                .replace(" ", "_")
-            )
-
-            if normalized_status in {
-                "COMPLETED",
-                "COMPLETE",
-                "SUCCESS",
-                "SUCCEEDED",
-                "DONE",
-            }:
+            if normalized in {"COMPLETED", "COMPLETE", "SUCCESS", "SUCCEEDED", "DONE"}:
                 return data
 
-            if normalized_status in {
-                "FAILED",
-                "FAILURE",
-                "ERROR",
-                "CANCELLED",
-                "CANCELED",
-            }:
-                error_message = (
-                    data.get("message")
-                    or data.get("error")
-                    or data.get("detail")
-                    or "Unknown FortyGuard error."
-                )
+            if normalized in {"FAILED", "FAILURE", "ERROR", "CANCELLED", "CANCELED"}:
+                message = data.get("message") or data.get("error") or data.get("detail") or "Unknown FortyGuard error."
+                raise RuntimeError(f"FortyGuard activity failed: {message}")
 
-                raise RuntimeError(
-                    "FortyGuard activity failed: "
-                    f"{error_message}"
-                )
-
-            await asyncio.sleep(
-                self.STATUS_POLL_INTERVAL_SECONDS
-            )
+            await asyncio.sleep(delay)
+            delay = min(delay * 2, self.MAX_STATUS_POLL_SECONDS)
 
         raise TimeoutError(
-            "FortyGuard heatmap activity did not "
-            "complete in time. "
+            "FortyGuard heatmap activity did not complete in time. "
             f"Last status: {last_status}"
         )
 
-    # ============================================================
-    # FORTYGUARD PAYLOAD
-    # ============================================================
+    @staticmethod
+    def _current_nyc_hour() -> datetime:
+        return datetime.now(ZoneInfo("America/New_York")).replace(
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
 
-    def _build_heatmap_payload(
-        self,
-    ) -> dict[str, Any]:
-        """
-        Build a deterministic FortyGuard heatmap request using the
-        documentation example AOI/time that has already returned real
-        heatmap cells during integration testing.
-        """
+    def _build_heatmap_payload(self, target_time: datetime | None = None) -> dict[str, Any]:
+        if target_time is None:
+            target_time = self._current_nyc_hour()
 
         polygon_geometry = {
             "type": "Polygon",
-            "coordinates": [
-                [
-                    [-74.0170, 40.7050],
-                    [-74.0030, 40.7050],
-                    [-74.0030, 40.7180],
-                    [-74.0170, 40.7180],
-                    [-74.0170, 40.7050],
-                ]
-            ],
-        }
-
-        polygon_aoi = {
-            "type": "FeatureCollection",
-            "features": [
-                {
-                    "type": "Feature",
-                    "properties": {},
-                    "geometry": polygon_geometry,
-                }
-            ],
+            "coordinates": [[
+                [-74.0170, 40.7050],
+                [-74.0030, 40.7050],
+                [-74.0030, 40.7180],
+                [-74.0170, 40.7180],
+                [-74.0170, 40.7050],
+            ]],
         }
 
         return {
-            "polygon_aoi": polygon_aoi,
+            "polygon_aoi": {
+                "type": "FeatureCollection",
+                "features": [{
+                    "type": "Feature",
+                    "properties": {},
+                    "geometry": polygon_geometry,
+                }],
+            },
             "date_time": {
-                "start_date": "2024-07-15",
-                "start_time": "14:00",
+                "start_date": target_time.strftime("%Y-%m-%d"),
+                "start_time": target_time.strftime("%H:%M"),
                 "filter_type": 1,
             },
             "granularity": 100,
             "analytic_type": "tcm",
         }
 
-    # ============================================================
-    # LIVE RESPONSE NORMALIZATION
-    # ============================================================
-
+    # ------------------------------------------------------------------
+    # LIVE RESPONSE NORMALIZATION + DEMO/HELPERS
+    # ------------------------------------------------------------------
     def _normalize_live_response(
         self,
         raw: dict[str, Any],
@@ -680,6 +735,35 @@ class FortyGuardService:
             ),
             tiles=tiles,
         )
+
+    # ============================================================
+    # DEMO DATA
+    # ============================================================
+
+    def _load_demo_heatmap(
+        self,
+    ) -> HeatmapResponse:
+        if not self.demo_file.exists():
+            raise FileNotFoundError(
+                "AI HeatShield demo heatmap file "
+                f"not found: {self.demo_file}"
+            )
+
+        with self.demo_file.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
+            raw = json.load(
+                file
+            )
+
+        return HeatmapResponse.model_validate(
+            raw
+        )
+
+    # ============================================================
+    # RESPONSE HELPERS
+    # ============================================================
 
     def _extract_activity_id(
         self,

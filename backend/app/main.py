@@ -26,15 +26,14 @@ app.include_router(router)
 
 
 @app.get("/")
-def root():
+def root() -> dict:
     return {
         "project": "AI HeatShield",
         "status": "running",
+        "architecture": "fast-first-cache-refresh",
     }
 
 
 @app.get("/health")
-def health():
-    return {
-        "status": "healthy",
-    }
+def health() -> dict:
+    return {"status": "healthy"}
