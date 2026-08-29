@@ -250,6 +250,9 @@ export default function Home() {
           .toUpperCase()
       : "DEMO";
 
+  const isLive =
+    safeMode === "LIVE";
+
   return (
     <main className="min-h-screen bg-transparent text-slate-100">
       <div className="mx-auto max-w-[1480px] px-4 py-4 md:px-6 lg:px-8">
@@ -270,6 +273,7 @@ export default function Home() {
 
           <HeroOverview
             data={data}
+            mode={safeMode}
           />
 
           <RiskCard
@@ -390,42 +394,73 @@ export default function Home() {
           <MetricCard
             label="Temperature"
             value={`${zone.temperature}°C`}
-            subtitle={`${signed(
-              zone.temperature -
-                data
-                  .statistics
-                  .temperature_mean,
-            )}°C vs area mean`}
-            badge="TEMP"
+            subtitle={
+              isLive
+                ? `FortyGuard hyperlocal • ${signed(
+                    zone.temperature -
+                      data.statistics.temperature_mean,
+                  )}°C vs area mean`
+                : `${signed(
+                    zone.temperature -
+                      data.statistics.temperature_mean,
+                  )}°C vs area mean`
+            }
+            badge={isLive ? "FORTYGUARD" : "TEMP"}
           />
 
           <MetricCard
             label="Heat Index"
             value={`${zone.heat_index}°C`}
-            subtitle="Perceived thermal stress"
-            badge="HEAT"
+            subtitle={
+              isLive
+                ? "Calculated from FortyGuard temperature + contextual humidity"
+                : "Perceived thermal stress"
+            }
+            badge={isLive ? "CALCULATED" : "HEAT"}
           />
 
           <MetricCard
             label="Humidity"
             value={`${zone.humidity}%`}
             subtitle={
-              zone.humidity <
-              35
-                ? "Dry conditions"
-                : "Elevated moisture"
+              isLive
+                ? `Open-Meteo contextual data • ${
+                    zone.humidity < 35
+                      ? "dry conditions"
+                      : "elevated moisture"
+                  }`
+                : zone.humidity < 35
+                  ? "Dry conditions"
+                  : "Elevated moisture"
             }
-            badge="HUM"
+            badge={isLive ? "OPEN-METEO" : "HUM"}
           />
 
           <MetricCard
             label="Solar Radiation"
-            value={`${zone.solar_radiation}`}
-            subtitle="W/m² local exposure"
-            badge="SUN"
+            value={`${zone.solar_radiation} W/m²`}
+            subtitle={
+              isLive
+                ? "Open-Meteo contextual solar exposure"
+                : "Local solar exposure"
+            }
+            badge={isLive ? "OPEN-METEO" : "SUN"}
           />
 
         </section>
+
+        {isLive && (
+          <div className="mt-3 rounded-xl border border-sky-400/10 bg-sky-400/[0.025] px-4 py-3">
+            <p className="text-[10px] leading-5 text-slate-500">
+              Live analysis fuses FortyGuard hyperlocal temperature cells with
+              Open-Meteo historical environmental context for the same NYC
+              location, date and hour. Humidity, wet-bulb temperature and solar
+              radiation are contextual weather-grid values rather than
+              FortyGuard hyperlocal measurements. Heat index is calculated
+              from the fused temperature and humidity inputs.
+            </p>
+          </div>
+        )}
 
         <section className="mt-5">
 
@@ -488,6 +523,7 @@ export default function Home() {
             factors={
               zone.factors
             }
+            mode={safeMode}
           />
 
           <ClimateSummary
@@ -659,11 +695,16 @@ function TopHeader({
 
 function HeroOverview({
   data,
+  mode,
 }: {
   data: AnalysisData;
+  mode: string;
 }) {
   const zone =
     data.selected_zone;
+
+  const isLive =
+    mode === "LIVE";
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-slate-800/70 bg-[#0c1620]/78 p-6 backdrop-blur-xl md:p-7">
@@ -722,7 +763,11 @@ function HeroOverview({
           />
 
           <MiniInfo
-            label="Wet Bulb"
+            label={
+              isLive
+                ? "Wet Bulb • Open-Meteo"
+                : "Wet Bulb"
+            }
             value={`${zone.wet_bulb}°C`}
           />
 
@@ -1567,10 +1612,11 @@ function ForecastPanel({
       <div className="mt-4 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
 
         <p className="text-[10px] leading-5 text-slate-600">
-          In demo mode, forecast points
-          are scenario-generated
-          projections for product
-          demonstration.
+          Forecast points are
+          scenario-generated projections for
+          decision-support demonstration; they
+          are not observed future FortyGuard or
+          Open-Meteo measurements.
         </p>
 
       </div>
@@ -1762,8 +1808,10 @@ function HotspotPanel({
 
 function RiskDriverPanel({
   factors,
+  mode,
 }: {
   factors: RiskFactor[];
+  mode: string;
 }) {
   const sorted = [
     ...(factors || []),
@@ -1836,6 +1884,17 @@ function RiskDriverPanel({
 
       </div>
 
+      {mode === "LIVE" && (
+        <div className="mt-4 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
+          <p className="text-[10px] leading-5 text-slate-600">
+            Driver contributions use FortyGuard hyperlocal temperature,
+            Open-Meteo contextual humidity/wet-bulb/solar inputs, and a
+            calculated heat index. They are explainable model contributions,
+            not separate sensor measurements.
+          </p>
+        </div>
+      )}
+
     </Panel>
   );
 }
@@ -1896,7 +1955,37 @@ function ClimateSummary({
           value={mode}
         />
 
+        {mode === "LIVE" && (
+          <>
+            <SummaryRow
+              label="Hyperlocal Temperature"
+              value="FortyGuard"
+            />
+
+            <SummaryRow
+              label="Environmental Context"
+              value="Open-Meteo"
+            />
+
+            <SummaryRow
+              label="Heat Index"
+              value="Calculated"
+            />
+          </>
+        )}
+
       </div>
+
+      {mode === "LIVE" && (
+        <div className="mt-4 rounded-xl border border-sky-400/10 bg-sky-400/[0.025] px-4 py-3">
+          <p className="text-[10px] leading-5 text-slate-600">
+            FortyGuard provides the spatial temperature field. Open-Meteo
+            provides aligned area-level environmental context; those contextual
+            variables should not be interpreted as 100 m FortyGuard
+            measurements.
+          </p>
+        </div>
+      )}
 
     </Panel>
   );
