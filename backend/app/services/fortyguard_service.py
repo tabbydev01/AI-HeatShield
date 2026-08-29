@@ -160,11 +160,9 @@ class FortyGuardService:
 
                 self.last_source = "DEMO_FALLBACK"
 
-                self._store_cache(
-                    result,
-                    "DEMO_FALLBACK",
-                )
-
+                # Do not cache a failed live request. This allows the
+                # next request to retry FortyGuard immediately instead of
+                # serving a 15-minute DEMO_FALLBACK cache.
                 return result
 
     def get_source(self) -> str:
@@ -411,45 +409,20 @@ class FortyGuardService:
         self,
     ) -> dict[str, Any]:
         """
-        Build a FortyGuard heatmap request for a small area of
-        central Phoenix.
-
-        FortyGuard expects:
-        - polygon_aoi as a GeoJSON FeatureCollection
-        - date_time as an object containing start_date, start_time,
-          and filter_type
-        - granularity as an integer in metres
+        Build a deterministic FortyGuard heatmap request using the
+        documentation example AOI/time that has already returned real
+        heatmap cells during integration testing.
         """
 
-        now = datetime.now(
-            timezone.utc
-        )
-
-        # Small polygon around central Phoenix.
         polygon_geometry = {
             "type": "Polygon",
             "coordinates": [
                 [
-                    [
-                        -112.0810,
-                        33.4420,
-                    ],
-                    [
-                        -112.0670,
-                        33.4420,
-                    ],
-                    [
-                        -112.0670,
-                        33.4550,
-                    ],
-                    [
-                        -112.0810,
-                        33.4550,
-                    ],
-                    [
-                        -112.0810,
-                        33.4420,
-                    ],
+                    [-74.0170, 40.7050],
+                    [-74.0030, 40.7050],
+                    [-74.0030, 40.7180],
+                    [-74.0170, 40.7180],
+                    [-74.0170, 40.7050],
                 ]
             ],
         }
@@ -468,8 +441,8 @@ class FortyGuardService:
         return {
             "polygon_aoi": polygon_aoi,
             "date_time": {
-                "start_date": now.strftime("%Y-%m-%d"),
-                "start_time": now.strftime("%H:%M"),
+                "start_date": "2024-07-15",
+                "start_time": "14:00",
                 "filter_type": 1,
             },
             "granularity": 100,
@@ -485,159 +458,94 @@ class FortyGuardService:
         raw: dict[str, Any],
     ) -> HeatmapResponse:
         """
-        Normalize different possible FortyGuard response wrappers
-        into the application's internal HeatmapResponse schema.
+        Normalize FortyGuard async/status responses and GeoJSON
+        FeatureCollection heatmap cells into HeatmapResponse.
         """
 
-        payload = self._unwrap_result(
-            raw
-        )
-
-        map_data = self._extract_map_data(
-            payload
-        )
-
-        stats_data = self._extract_stats_data(
-            payload
-        )
+        map_data = self._extract_map_data(raw)
+        stats_data = self._extract_stats_data(raw)
 
         if not map_data:
             raise RuntimeError(
-                "FortyGuard completed successfully but "
-                "no map_data was found in the response."
+                "FortyGuard completed successfully but no usable "
+                "map_data/features were found in the response."
             )
 
         tiles: list[HeatTile] = []
 
-        for index, item in enumerate(
-            map_data
-        ):
-            if not isinstance(
+        for index, item in enumerate(map_data):
+            if not isinstance(item, dict):
+                continue
+
+            latitude, longitude = self._extract_coordinates(item)
+            if latitude is None or longitude is None:
+                continue
+
+            temperature = self._extract_number(
                 item,
-                dict,
-            ):
-                continue
-
-            latitude, longitude = (
-                self._extract_coordinates(
-                    item
-                )
-            )
-
-            if (
-                latitude is None
-                or longitude is None
-            ):
-                continue
-
-            temperature = (
-                self._extract_number(
-                    item,
-                    [
-                        "temperature",
-                        "temp",
-                        "air_temperature",
-                        "temperature_c",
-                        "tcm",
-                        "value",
-                    ],
-                )
+                [
+                    "temperature",
+                    "temp",
+                    "air_temperature",
+                    "average_temperature",
+                    "temperature_c",
+                    "tcm",
+                    "value",
+                ],
             )
 
             if temperature is None:
                 continue
 
-            # Environmental parameters are intentionally NOT
-            # fabricated here. If FortyGuard does not provide one,
-            # conservative neutral placeholders are used only to
-            # satisfy the current internal schema.
-            #
-            # These values must NOT be represented as measured
-            # FortyGuard environmental observations in the UI.
-            humidity = (
-                self._extract_number(
-                    item,
-                    [
-                        "humidity",
-                        "relative_humidity",
-                        "rh",
-                    ],
-                )
+            humidity = self._extract_number(
+                item,
+                ["humidity", "relative_humidity", "rh"],
             )
-
-            heat_index = (
-                self._extract_number(
-                    item,
-                    [
-                        "heat_index",
-                        "heatindex",
-                        "apparent_temperature",
-                    ],
-                )
+            heat_index = self._extract_number(
+                item,
+                [
+                    "heat_index",
+                    "heatindex",
+                    "apparent_temperature",
+                ],
             )
-
-            wet_bulb = (
-                self._extract_number(
-                    item,
-                    [
-                        "wet_bulb",
-                        "wet_bulb_temperature",
-                        "wetbulb",
-                    ],
-                )
+            wet_bulb = self._extract_number(
+                item,
+                [
+                    "wet_bulb",
+                    "wet_bulb_temperature",
+                    "wetbulb",
+                ],
             )
-
-            solar = (
-                self._extract_number(
-                    item,
-                    [
-                        "solar_radiation",
-                        "solar_irradiance",
-                        "solar",
-                    ],
-                )
+            solar = self._extract_number(
+                item,
+                [
+                    "solar_radiation",
+                    "solar_irradiance",
+                    "solar",
+                ],
             )
 
             tiles.append(
                 HeatTile(
-                    id=self._extract_tile_id(
-                        item,
-                        index,
-                    ),
-                    latitude=round(
-                        latitude,
-                        6,
-                    ),
-                    longitude=round(
-                        longitude,
-                        6,
-                    ),
-                    temperature=round(
-                        temperature,
-                        2,
-                    ),
+                    id=self._extract_tile_id(item, index),
+                    latitude=round(latitude, 6),
+                    longitude=round(longitude, 6),
+                    temperature=round(temperature, 2),
                     humidity=round(
-                        humidity
-                        if humidity is not None
-                        else 0.0,
+                        humidity if humidity is not None else 0.0,
                         2,
                     ),
                     heat_index=round(
-                        heat_index
-                        if heat_index is not None
-                        else temperature,
+                        heat_index if heat_index is not None else temperature,
                         2,
                     ),
                     wet_bulb=round(
-                        wet_bulb
-                        if wet_bulb is not None
-                        else 0.0,
+                        wet_bulb if wet_bulb is not None else 0.0,
                         2,
                     ),
                     solar_radiation=round(
-                        solar
-                        if solar is not None
-                        else 0.0,
+                        solar if solar is not None else 0.0,
                         2,
                     ),
                 )
@@ -645,33 +553,21 @@ class FortyGuardService:
 
         if not tiles:
             raise RuntimeError(
-                "No usable heat tiles could be normalized "
-                "from the FortyGuard response."
+                "FortyGuard returned map cells, but none could be "
+                "normalized. Expected GeoJSON Polygon features with "
+                "properties.average_temperature."
             )
 
-        temperatures = [
-            tile.temperature
-            for tile in tiles
-        ]
+        temperatures = [tile.temperature for tile in tiles]
 
         minimum = self._first_number(
             stats_data,
-            [
-                "temperature_min",
-                "min_temperature",
-                "min",
-            ],
+            ["temperature_min", "min_temperature", "min"],
         )
-
         maximum = self._first_number(
             stats_data,
-            [
-                "temperature_max",
-                "max_temperature",
-                "max",
-            ],
+            ["temperature_max", "max_temperature", "max"],
         )
-
         mean = self._first_number(
             stats_data,
             [
@@ -685,107 +581,35 @@ class FortyGuardService:
         )
 
         if minimum is None:
-            minimum = min(
-                temperatures
-            )
-
+            minimum = min(temperatures)
         if maximum is None:
-            maximum = max(
-                temperatures
-            )
-
+            maximum = max(temperatures)
         if mean is None:
-            mean = (
-                sum(
-                    temperatures
-                )
-                / len(
-                    temperatures
-                )
-            )
+            mean = sum(temperatures) / len(temperatures)
 
         center_latitude = (
-            sum(
-                tile.latitude
-                for tile in tiles
-            )
-            / len(
-                tiles
-            )
+            sum(tile.latitude for tile in tiles) / len(tiles)
         )
-
         center_longitude = (
-            sum(
-                tile.longitude
-                for tile in tiles
-            )
-            / len(
-                tiles
-            )
+            sum(tile.longitude for tile in tiles) / len(tiles)
         )
 
         return HeatmapResponse(
             location={
-                "city": "Phoenix",
-                "state": "Arizona",
+                "city": "New York City",
+                "state": "New York",
                 "country": "USA",
-                "latitude": round(
-                    center_latitude,
-                    6,
-                ),
-                "longitude": round(
-                    center_longitude,
-                    6,
-                ),
+                "latitude": round(center_latitude, 6),
+                "longitude": round(center_longitude, 6),
             },
-            generated_at=datetime.now(
-                timezone.utc
-            ).isoformat(),
+            generated_at=datetime.now(timezone.utc).isoformat(),
             statistics=HeatmapStatistics(
-                temperature_min=round(
-                    minimum,
-                    2,
-                ),
-                temperature_max=round(
-                    maximum,
-                    2,
-                ),
-                temperature_mean=round(
-                    mean,
-                    2,
-                ),
+                temperature_min=round(minimum, 2),
+                temperature_max=round(maximum, 2),
+                temperature_mean=round(mean, 2),
             ),
             tiles=tiles,
         )
-
-    # ============================================================
-    # DEMO DATA
-    # ============================================================
-
-    def _load_demo_heatmap(
-        self,
-    ) -> HeatmapResponse:
-        if not self.demo_file.exists():
-            raise FileNotFoundError(
-                "AI HeatShield demo heatmap file "
-                f"not found: {self.demo_file}"
-            )
-
-        with self.demo_file.open(
-            "r",
-            encoding="utf-8",
-        ) as file:
-            raw = json.load(
-                file
-            )
-
-        return HeatmapResponse.model_validate(
-            raw
-        )
-
-    # ============================================================
-    # RESPONSE HELPERS
-    # ============================================================
 
     def _extract_activity_id(
         self,
@@ -892,116 +716,129 @@ class FortyGuardService:
         raw: dict[str, Any],
     ) -> dict[str, Any]:
         """
-        Try common response wrappers without assuming one exact
-        FortyGuard response layout.
+        Return the nearest nested dictionary that contains heatmap data.
         """
+        found = self._find_heatmap_container(raw)
+        return found if found is not None else raw
 
-        current: Any = raw
-
-        for key in [
-            "result",
-            "data",
-            "output",
-            "response",
-        ]:
-            if (
-                isinstance(
-                    current,
-                    dict,
-                )
-                and key
-                in current
-                and isinstance(
-                    current[key],
-                    dict,
+    def _find_heatmap_container(
+        self,
+        value: Any,
+    ) -> dict[str, Any] | None:
+        if isinstance(value, dict):
+            if any(
+                key in value
+                for key in (
+                    "map_data",
+                    "mapData",
+                    "tiles",
+                    "features",
                 )
             ):
-                candidate = current[
-                    key
-                ]
+                return value
 
-                if (
-                    self._extract_map_data(
-                        candidate
-                    )
-                ):
-                    return candidate
+            for key in (
+                "data",
+                "result",
+                "output",
+                "response",
+            ):
+                child = value.get(key)
+                found = self._find_heatmap_container(child)
+                if found is not None:
+                    return found
 
-        return (
-            current
-            if isinstance(
-                current,
-                dict,
-            )
-            else raw
-        )
+            for child in value.values():
+                found = self._find_heatmap_container(child)
+                if found is not None:
+                    return found
+
+        elif isinstance(value, list):
+            for child in value:
+                found = self._find_heatmap_container(child)
+                if found is not None:
+                    return found
+
+        return None
 
     def _extract_map_data(
         self,
-        payload: dict[str, Any],
+        payload: Any,
     ) -> list[Any]:
-        candidates = [
-            payload.get(
-                "map_data"
-            ),
-            payload.get(
-                "mapData"
-            ),
-            payload.get(
-                "tiles"
-            ),
-            payload.get(
-                "features"
-            ),
-        ]
+        """
+        Extract FortyGuard cells from:
+        - map_data: [ ... ]
+        - map_data: {type: FeatureCollection, features: [...]}
+        - features: [...]
+        - tiles: [...]
+        - nested data/result/output/response wrappers
+        """
+        if isinstance(payload, list):
+            # A list of GeoJSON features / tiles is already usable.
+            if any(isinstance(item, dict) for item in payload):
+                return payload
+            return []
 
-        for candidate in candidates:
-            if isinstance(
-                candidate,
-                list,
-            ):
+        if not isinstance(payload, dict):
+            return []
+
+        for key in ("map_data", "mapData", "tiles", "features"):
+            candidate = payload.get(key)
+
+            if isinstance(candidate, list):
                 return candidate
 
-        data = payload.get(
-            "data"
-        )
+            if isinstance(candidate, dict):
+                features = candidate.get("features")
+                if isinstance(features, list):
+                    return features
 
-        if isinstance(
-            data,
-            dict,
-        ):
-            return (
-                self._extract_map_data(
-                    data
-                )
-            )
+                for inner_key in ("data", "values", "items", "tiles"):
+                    inner = candidate.get(inner_key)
+                    if isinstance(inner, list):
+                        return inner
+
+                nested = self._extract_map_data(candidate)
+                if nested:
+                    return nested
+
+        for key in ("data", "result", "output", "response"):
+            nested = self._extract_map_data(payload.get(key))
+            if nested:
+                return nested
+
+        for child in payload.values():
+            nested = self._extract_map_data(child)
+            if nested:
+                return nested
 
         return []
 
     def _extract_stats_data(
         self,
-        payload: dict[str, Any],
+        payload: Any,
     ) -> dict[str, Any]:
-        candidates = [
-            payload.get(
-                "stats_data"
-            ),
-            payload.get(
-                "statsData"
-            ),
-            payload.get(
-                "statistics"
-            ),
-            payload.get(
-                "stats"
-            ),
-        ]
+        if not isinstance(payload, dict):
+            return {}
 
-        for candidate in candidates:
-            if isinstance(
-                candidate,
-                dict,
-            ):
+        for key in (
+            "stats_data",
+            "statsData",
+            "statistics",
+            "stats",
+        ):
+            candidate = payload.get(key)
+            if isinstance(candidate, dict):
+                return candidate
+
+        for key in ("data", "result", "output", "response"):
+            candidate = self._extract_stats_data(payload.get(key))
+            if candidate:
+                return candidate
+
+        for child in payload.values():
+            candidate = self._extract_stats_data(child)
+            if candidate:
                 return candidate
 
         return {}
@@ -1009,153 +846,101 @@ class FortyGuardService:
     def _extract_coordinates(
         self,
         item: dict[str, Any],
-    ) -> tuple[
-        float | None,
-        float | None,
-    ]:
-        latitude = (
-            self._extract_number(
-                item,
-                [
-                    "latitude",
-                    "lat",
-                ],
-            )
+    ) -> tuple[float | None, float | None]:
+        latitude = self._extract_number(
+            item,
+            ["latitude", "lat"],
+        )
+        longitude = self._extract_number(
+            item,
+            ["longitude", "lon", "lng"],
         )
 
-        longitude = (
-            self._extract_number(
-                item,
-                [
-                    "longitude",
-                    "lon",
-                    "lng",
-                ],
+        if latitude is not None and longitude is not None:
+            return latitude, longitude
+
+        geometry = item.get("geometry")
+        if isinstance(geometry, dict):
+            coordinates = geometry.get("coordinates")
+            geometry_type = str(
+                geometry.get("type", "")
+            ).lower()
+
+            if (
+                geometry_type == "point"
+                and isinstance(coordinates, list)
+                and len(coordinates) >= 2
+                and isinstance(coordinates[0], (int, float))
+                and isinstance(coordinates[1], (int, float))
+            ):
+                return (
+                    float(coordinates[1]),
+                    float(coordinates[0]),
+                )
+
+            pairs = self._collect_coordinate_pairs(coordinates)
+            if pairs:
+                longitudes = [pair[0] for pair in pairs]
+                latitudes = [pair[1] for pair in pairs]
+                return (
+                    sum(latitudes) / len(latitudes),
+                    sum(longitudes) / len(longitudes),
+                )
+
+        center = item.get("center")
+        if isinstance(center, dict):
+            latitude = self._extract_number(
+                center,
+                ["latitude", "lat"],
             )
-        )
+            longitude = self._extract_number(
+                center,
+                ["longitude", "lon", "lng"],
+            )
+            if latitude is not None and longitude is not None:
+                return latitude, longitude
+
+        return None, None
+
+    def _collect_coordinate_pairs(
+        self,
+        value: Any,
+    ) -> list[tuple[float, float]]:
+        pairs: list[tuple[float, float]] = []
+
+        if not isinstance(value, list):
+            return pairs
 
         if (
-            latitude is not None
-            and longitude is not None
+            len(value) >= 2
+            and isinstance(value[0], (int, float))
+            and isinstance(value[1], (int, float))
         ):
-            return (
-                latitude,
-                longitude,
-            )
+            return [(float(value[0]), float(value[1]))]
 
-        geometry = item.get(
-            "geometry"
-        )
+        for child in value:
+            pairs.extend(self._collect_coordinate_pairs(child))
 
-        if isinstance(
-            geometry,
-            dict,
-        ):
-            coordinates = (
-                geometry.get(
-                    "coordinates"
-                )
-            )
-
-            if (
-                isinstance(
-                    coordinates,
-                    list,
-                )
-                and len(
-                    coordinates
-                )
-                >= 2
-                and isinstance(
-                    coordinates[0],
-                    (
-                        int,
-                        float,
-                    ),
-                )
-                and isinstance(
-                    coordinates[1],
-                    (
-                        int,
-                        float,
-                    ),
-                )
-            ):
-                return (
-                    float(
-                        coordinates[1]
-                    ),
-                    float(
-                        coordinates[0]
-                    ),
-                )
-
-        center = item.get(
-            "center"
-        )
-
-        if isinstance(
-            center,
-            dict,
-        ):
-            latitude = (
-                self._extract_number(
-                    center,
-                    [
-                        "latitude",
-                        "lat",
-                    ],
-                )
-            )
-
-            longitude = (
-                self._extract_number(
-                    center,
-                    [
-                        "longitude",
-                        "lon",
-                        "lng",
-                    ],
-                )
-            )
-
-            if (
-                latitude is not None
-                and longitude is not None
-            ):
-                return (
-                    latitude,
-                    longitude,
-                )
-
-        return (
-            None,
-            None,
-        )
+        return pairs
 
     def _extract_tile_id(
         self,
         item: dict[str, Any],
         index: int,
     ) -> str:
-        for key in [
-            "id",
-            "tile_id",
-            "cell_id",
-            "grid_id",
-        ]:
-            value = item.get(
-                key
-            )
-
+        for key in ("id", "tile_id", "cell_id", "grid_id"):
+            value = item.get(key)
             if value is not None:
-                return str(
-                    value
-                )
+                return str(value)
 
-        return (
-            f"FG-{index + 1:04d}"
-        )
+        properties = item.get("properties")
+        if isinstance(properties, dict):
+            for key in ("id", "tile_id", "cell_id", "grid_id"):
+                value = properties.get(key)
+                if value is not None:
+                    return str(value)
+
+        return f"FG-{index + 1:04d}"
 
     def _extract_number(
         self,
