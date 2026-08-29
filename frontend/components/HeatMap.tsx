@@ -125,6 +125,47 @@ export default function HeatMap({
       };
     }, [tiles]);
 
+  const riskLevelRanges =
+    useMemo(() => {
+      const ranges: Record<
+        string,
+        {
+          min: number;
+          max: number;
+        }
+      > = {};
+
+      for (const tile of tiles || []) {
+        const level =
+          normalizeRiskLevel(
+            tile.risk_level,
+          );
+
+        if (!ranges[level]) {
+          ranges[level] = {
+            min: tile.risk_score,
+            max: tile.risk_score,
+          };
+
+          continue;
+        }
+
+        ranges[level].min =
+          Math.min(
+            ranges[level].min,
+            tile.risk_score,
+          );
+
+        ranges[level].max =
+          Math.max(
+            ranges[level].max,
+            tile.risk_score,
+          );
+      }
+
+      return ranges;
+    }, [tiles]);
+
   if (!tiles?.length) {
     return (
       <div className="flex h-[560px] items-center justify-center rounded-2xl border border-slate-800/70 bg-[#081018]">
@@ -276,6 +317,7 @@ export default function HeatMap({
                 layer,
                 temperatureRange,
                 heatIndexRange,
+                riskLevelRanges,
               );
 
             return (
@@ -664,12 +706,21 @@ function getTileColor(
     min: number;
     max: number;
   },
+  riskLevelRanges: Record<
+    string,
+    {
+      min: number;
+      max: number;
+    }
+  >,
 ) {
   if (
     layer === "risk"
   ) {
     return getRiskColor(
       tile.risk_level,
+      tile.risk_score,
+      riskLevelRanges,
     );
   }
 
@@ -691,35 +742,154 @@ function getTileColor(
   );
 }
 
-function getRiskColor(
+function normalizeRiskLevel(
   level: string,
 ) {
   const safeLevel =
     typeof level === "string"
-      ? level.toUpperCase()
+      ? level
+          .trim()
+          .toUpperCase()
       : "";
 
-  switch (
-    safeLevel
+  return safeLevel || "LOW";
+}
+
+function getRiskColor(
+  level: string,
+  score: number,
+  ranges: Record<
+    string,
+    {
+      min: number;
+      max: number;
+    }
+  >,
+) {
+  const safeLevel =
+    normalizeRiskLevel(
+      level,
+    );
+
+  const range =
+    ranges[safeLevel];
+
+  let ratio = 0.5;
+
+  if (
+    range &&
+    Number.isFinite(score)
   ) {
+    const riskSpread =
+      range.max -
+      range.min;
+
+    if (riskSpread > 0) {
+      ratio =
+        (score -
+          range.min) /
+        riskSpread;
+    }
+  }
+
+  const clampedRatio =
+    Math.max(
+      0,
+      Math.min(
+        1,
+        ratio,
+      ),
+    );
+
+  switch (safeLevel) {
     case "LOW":
-      return "#10b981";
+      return pickShade(
+        clampedRatio,
+        [
+          "#065f46",
+          "#047857",
+          "#059669",
+          "#10b981",
+          "#6ee7b7",
+        ],
+      );
 
     case "MODERATE":
-      return "#eab308";
+      return pickShade(
+        clampedRatio,
+        [
+          "#84cc16",
+          "#a3e635",
+          "#eab308",
+          "#facc15",
+          "#fde047",
+        ],
+      );
 
     case "HIGH":
-      return "#f59e0b";
+      return pickShade(
+        clampedRatio,
+        [
+          "#d97706",
+          "#f59e0b",
+          "#fbbf24",
+          "#fb923c",
+          "#f97316",
+        ],
+      );
 
     case "VERY HIGH":
-      return "#f97316";
+      return pickShade(
+        clampedRatio,
+        [
+          "#ea580c",
+          "#f97316",
+          "#fb923c",
+          "#ef4444",
+          "#f43f5e",
+        ],
+      );
 
     case "CRITICAL":
-      return "#f43f5e";
+      return pickShade(
+        clampedRatio,
+        [
+          "#e11d48",
+          "#f43f5e",
+          "#fb7185",
+          "#ef4444",
+          "#dc2626",
+        ],
+      );
 
     default:
       return "#64748b";
   }
+}
+
+function pickShade(
+  ratio: number,
+  shades: string[],
+) {
+  const safeRatio =
+    Math.max(
+      0,
+      Math.min(
+        1,
+        ratio,
+      ),
+    );
+
+  const index =
+    Math.min(
+      shades.length - 1,
+      Math.floor(
+        safeRatio *
+          shades.length,
+      ),
+    );
+
+  return shades[index];
 }
 
 function getGradientColor(

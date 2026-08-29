@@ -176,6 +176,32 @@ export default function Home() {
     void initializeDashboard();
   }, []);
 
+  useEffect(() => {
+    const elements = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-reveal]"),
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.setAttribute("data-visible", "true");
+          } else {
+            entry.target.setAttribute("data-visible", "false");
+          }
+        });
+      },
+      {
+        threshold: 0.06,
+        rootMargin: "40px 0px 40px 0px",
+      },
+    );
+
+    elements.forEach((element) => observer.observe(element));
+
+    return () => observer.disconnect();
+  }, [data]);
+
   async function initializeDashboard() {
     const initial = await loadAnalysis(
       undefined,
@@ -358,8 +384,11 @@ export default function Home() {
     safeMode === "CACHED_LIVE";
 
   return (
-    <main className="min-h-screen bg-transparent text-slate-100">
-      <div className="mx-auto max-w-[1480px] px-4 py-4 md:px-6 lg:px-8">
+    <main className="relative min-h-screen overflow-hidden bg-[#071119] text-slate-100">
+      <DashboardMotionStyles />
+      <AmbientBackground />
+
+      <div className="relative z-10 mx-auto max-w-[1480px] px-4 py-5 md:px-6 lg:px-8">
 
         <TopHeader
           data={data}
@@ -374,7 +403,7 @@ export default function Home() {
           refreshing={backgroundRefreshing}
         />
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[1.55fr_0.45fr]">
+        <section data-reveal className="heatshield-reveal mt-5 grid gap-5 xl:grid-cols-[1.55fr_0.45fr]">
 
           <HeroOverview
             data={data}
@@ -395,13 +424,13 @@ export default function Home() {
 
         </section>
 
-        <section className="mt-5">
+        <section data-reveal className="heatshield-reveal mt-5">
 
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
 
             <div>
 
-              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-sky-300/70">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-300/70">
                 Spatial Intelligence
               </p>
 
@@ -409,7 +438,7 @@ export default function Home() {
                 Interactive Urban Heat Map
               </h2>
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-[13px] text-slate-300/75">
                 Explore{" "}
                 {
                   data
@@ -427,7 +456,7 @@ export default function Home() {
 
               <div className="rounded-xl border border-slate-800/70 bg-[#0c1620]/80 px-3 py-2">
 
-                <p className="text-[8px] uppercase tracking-[0.15em] text-slate-600">
+                <p className="text-[8px] uppercase tracking-[0.15em] text-slate-500">
                   Heat Cells
                 </p>
 
@@ -443,7 +472,7 @@ export default function Home() {
 
               <div className="rounded-xl border border-slate-800/70 bg-[#0c1620]/80 px-3 py-2">
 
-                <p className="text-[8px] uppercase tracking-[0.15em] text-slate-600">
+                <p className="text-[8px] uppercase tracking-[0.15em] text-slate-500">
                   Selected
                 </p>
 
@@ -494,7 +523,7 @@ export default function Home() {
 
         </section>
 
-        <section className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section data-reveal className="heatshield-reveal mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
           <MetricCard
             label="Temperature"
@@ -556,7 +585,7 @@ export default function Home() {
 
         {isLive && (
           <div className="mt-3 rounded-xl border border-sky-400/10 bg-sky-400/[0.025] px-4 py-3">
-            <p className="text-[10px] leading-5 text-slate-500">
+            <p className="text-[12px] leading-5 text-slate-500">
               FortyGuard-backed analysis fuses hyperlocal temperature cells with
               Open-Meteo environmental context aligned to the same NYC location,
               date and hour. Humidity, wet-bulb temperature and solar radiation
@@ -567,7 +596,7 @@ export default function Home() {
           </div>
         )}
 
-        <section className="mt-5">
+        <section data-reveal className="heatshield-reveal mt-5">
 
           <HistoricalPanel
             historical={
@@ -577,7 +606,7 @@ export default function Home() {
 
         </section>
 
-        <section className="mt-5">
+        <section data-reveal className="heatshield-reveal mt-5">
 
           <VulnerabilityPanel
             vulnerability={
@@ -587,7 +616,7 @@ export default function Home() {
 
         </section>
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+        <section data-reveal className="heatshield-reveal mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
 
           <ForecastPanel
             forecast={
@@ -607,7 +636,7 @@ export default function Home() {
 
         </section>
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-3">
+        <section data-reveal className="heatshield-reveal mt-5 grid gap-5 xl:grid-cols-3">
 
           <HotspotPanel
             hotspots={
@@ -639,7 +668,7 @@ export default function Home() {
 
         </section>
 
-        <section className="mt-5">
+        <section data-reveal className="heatshield-reveal mt-5">
 
           <InterventionSimulator
             interventions={
@@ -649,7 +678,7 @@ export default function Home() {
 
         </section>
 
-        <footer className="mt-8 flex flex-col gap-2 border-t border-slate-800/60 py-5 text-xs text-slate-600 md:flex-row md:items-center md:justify-between">
+        <footer className="mt-8 flex flex-col gap-2 border-t border-slate-800/60 py-5 text-[13px] text-slate-300/75 md:flex-row md:items-center md:justify-between">
 
           <p>
             AI HeatShield • Hyperlocal
@@ -706,13 +735,16 @@ function TopHeader({
           : "Demo Mode";
 
   return (
-    <header className="rounded-2xl border border-slate-800/70 bg-[#0c1620]/85 px-4 py-4 backdrop-blur-xl md:px-5">
+    <header className="relative overflow-hidden rounded-2xl border border-slate-700/60 bg-[#0a141e]/75 px-4 py-4 shadow-[0_18px_70px_rgba(0,0,0,0.28)] backdrop-blur-2xl md:px-5">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/40 to-transparent" />
+      <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-sky-400/[0.08] blur-3xl" />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
         <div className="flex items-center gap-3">
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10">
+          <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-amber-300/25 bg-gradient-to-br from-amber-300/15 to-sky-400/10 shadow-[0_0_30px_rgba(251,191,36,0.08)]">
+            <span className="absolute inset-0 animate-pulse bg-gradient-to-br from-amber-300/[0.04] to-transparent" />
 
             <span className="text-sm font-bold text-amber-300">
               AH
@@ -752,7 +784,7 @@ function TopHeader({
 
             </div>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-[13px] text-slate-300/75">
               Hyperlocal Heat Risk &
               Urban Decision Intelligence
             </p>
@@ -824,19 +856,20 @@ function HeroOverview({
     mode === "CACHED_LIVE";
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-slate-800/70 bg-[#0c1620]/78 p-6 backdrop-blur-xl md:p-7">
-
-      <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-sky-400/[0.045] blur-3xl" />
+    <section className="heatshield-interactive-card group relative overflow-hidden rounded-2xl border border-slate-700/60 bg-gradient-to-br from-[#0c1823]/88 via-[#0a141e]/78 to-[#081018]/72 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.24)] backdrop-blur-2xl md:p-7">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-sky-300/0 via-sky-300/40 to-amber-300/0" />
+      <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-sky-400/[0.07] blur-3xl transition duration-700 group-hover:bg-sky-400/[0.10]" />
+      <div className="absolute bottom-0 left-1/3 h-40 w-64 rounded-full bg-amber-300/[0.035] blur-3xl" />
 
       <div className="relative">
 
         <div className="flex flex-wrap items-center gap-2">
 
-          <span className="rounded-full border border-sky-400/15 bg-sky-400/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-300">
+          <span className="rounded-full border border-sky-400/15 bg-sky-400/[0.06] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
             Climate Intelligence
           </span>
 
-          <span className="text-xs text-slate-600">
+          <span className="text-[13px] text-slate-300/75">
             Selected zone:{" "}
             {zone.tile_id}
           </span>
@@ -933,13 +966,15 @@ function RiskCard({
     circumference;
 
   return (
-    <section className="rounded-2xl border border-amber-400/10 bg-[#0c1620]/85 p-6 backdrop-blur-xl">
+    <section className="heatshield-interactive-card group relative overflow-hidden rounded-2xl border border-amber-300/15 bg-gradient-to-br from-[#111a22]/88 to-[#09121b]/78 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/45 to-transparent" />
+      <div className="pointer-events-none absolute -right-14 top-10 h-40 w-40 rounded-full bg-amber-400/[0.06] blur-3xl transition duration-700 group-hover:bg-amber-400/[0.10]" />
 
       <div className="flex items-center justify-between">
 
         <div>
 
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
             Current Risk
           </p>
 
@@ -992,7 +1027,7 @@ function RiskCard({
               {score}
             </span>
 
-            <span className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-600">
+            <span className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-500">
               / 100
             </span>
 
@@ -1002,9 +1037,9 @@ function RiskCard({
 
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-800 bg-[#081018]/60 p-4">
+      <div className="heatshield-detail-card mt-4 rounded-xl border border-slate-700/70 bg-[#0b1822]/68 p-4">
 
-        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-600">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
           Main driver
         </p>
 
@@ -1030,11 +1065,12 @@ function MetricCard({
   badge: string;
 }) {
   return (
-    <section className="group rounded-2xl border border-slate-800/70 bg-[#0c1620]/75 p-5 backdrop-blur-lg transition duration-200 hover:-translate-y-0.5 hover:border-slate-700">
+    <section className="heatshield-interactive-card group relative overflow-hidden rounded-2xl border border-slate-700/65 bg-[#10202b]/82 p-5 shadow-[0_14px_50px_rgba(0,0,0,0.14)] backdrop-blur-xl">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/20 to-transparent opacity-0 transition duration-300 group-hover:opacity-100" />
 
       <div className="flex items-center justify-between">
 
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
           {label}
         </p>
 
@@ -1048,7 +1084,7 @@ function MetricCard({
         {value}
       </p>
 
-      <p className="mt-1.5 text-xs text-slate-500">
+      <p className="mt-1.5 text-[13px] text-slate-300/75">
         {subtitle}
       </p>
 
@@ -1064,14 +1100,23 @@ function HistoricalPanel({
   const history =
     historical?.history || [];
 
-  const maxRisk =
-    Math.max(
-      ...history.map(
-        (item) =>
-          item.risk_score,
-      ),
-      100,
+  const riskValues =
+    history.map(
+      (item) => item.risk_score,
     );
+
+  const minRisk =
+    riskValues.length
+      ? Math.min(...riskValues)
+      : 0;
+
+  const maxRisk =
+    riskValues.length
+      ? Math.max(...riskValues)
+      : 1;
+
+  const riskRange =
+    Math.max(maxRisk - minRisk, 1);
 
   return (
     <Panel
@@ -1116,17 +1161,17 @@ function HistoricalPanel({
 
         </div>
 
-        <div className="rounded-xl border border-slate-800/70 bg-[#081018]/45 p-4">
+        <div className="heatshield-detail-card rounded-xl border border-slate-700/65 bg-[#0b1822]/68 p-4">
 
           <div className="flex flex-wrap items-center justify-between gap-3">
 
             <div>
 
-              <p className="text-xs font-medium text-slate-300">
+              <p className="text-[16px] font-semibold text-slate-100">
                 Risk Trend
               </p>
 
-              <p className="mt-1 text-[10px] text-slate-600">
+              <p className="mt-1.5 text-[13px] leading-5 text-slate-300/75">
                 Relative risk progression
                 across the demo historical
                 window.
@@ -1135,7 +1180,7 @@ function HistoricalPanel({
             </div>
 
             <span
-              className={`rounded-full border px-3 py-1 text-[9px] font-semibold uppercase tracking-wider ${
+              className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider ${
                 historical.trend ===
                 "WARMING"
                   ? "border-rose-400/20 bg-rose-400/[0.08] text-rose-300"
@@ -1156,13 +1201,14 @@ function HistoricalPanel({
 
             {history.map(
               (point) => {
+                const normalizedRisk =
+                  (point.risk_score -
+                    minRisk) /
+                  riskRange;
+
                 const height =
-                  Math.max(
-                    14,
-                    (point.risk_score /
-                      maxRisk) *
-                      100,
-                  );
+                  24 +
+                  normalizedRisk * 72;
 
                 return (
                   <div
@@ -1174,7 +1220,7 @@ function HistoricalPanel({
 
                     <div className="mb-2 text-center">
 
-                      <p className="text-[10px] font-medium text-slate-300">
+                      <p className="text-[13px] font-semibold text-slate-100">
                         {
                           point.risk_score
                         }
@@ -1185,7 +1231,7 @@ function HistoricalPanel({
                     <div className="flex flex-1 items-end">
 
                       <div
-                        className="w-full rounded-t-lg bg-gradient-to-t from-amber-500/40 to-rose-400/90 transition-all duration-700"
+                        className="heatshield-chart-bar w-full rounded-t-lg border border-rose-300/20 bg-gradient-to-t from-amber-500/55 via-orange-400/75 to-rose-400 shadow-[0_0_24px_rgba(251,113,133,0.12)] transition-all duration-1000 ease-out"
                         style={{
                           height: `${height}%`,
                         }}
@@ -1193,7 +1239,7 @@ function HistoricalPanel({
 
                     </div>
 
-                    <p className="mt-2 text-center text-[9px] leading-4 text-slate-600">
+                    <p className="mt-2.5 text-center text-[12px] font-medium leading-4 text-slate-300/70">
                       {
                         point.label
                       }
@@ -1212,23 +1258,23 @@ function HistoricalPanel({
               (point) => (
                 <div
                   key={`${point.label}-detail`}
-                  className="rounded-lg bg-slate-900/40 px-3 py-2"
+                  className="heatshield-detail-card rounded-xl border border-slate-800/65 bg-slate-900/55 px-3.5 py-3"
                 >
 
-                  <p className="text-[9px] text-slate-600">
+                  <p className="text-[12px] font-medium text-slate-400">
                     {
                       point.label
                     }
                   </p>
 
-                  <p className="mt-1 text-[11px] font-medium text-slate-300">
+                  <p className="mt-1.5 text-[14px] font-semibold text-slate-100">
                     {
                       point.temperature
                     }
                     °C
                   </p>
 
-                  <p className="mt-0.5 text-[9px] text-slate-600">
+                  <p className="mt-1 text-[11px] text-slate-400">
                     Heat index{" "}
                     {
                       point.heat_index
@@ -1248,7 +1294,7 @@ function HistoricalPanel({
 
       <div className="mt-4 rounded-xl border border-amber-400/10 bg-amber-400/[0.025] px-4 py-3">
 
-        <p className="text-[10px] leading-5 text-slate-600">
+        <p className="text-[12px] leading-5 text-slate-500">
           Historical values are
           currently generated from an
           estimated demo baseline for
@@ -1284,9 +1330,9 @@ function HistoricalMetric({
     difference < 0;
 
   return (
-    <div className="rounded-xl border border-slate-800/70 bg-[#081018]/45 p-4">
+    <div className="heatshield-detail-card rounded-xl border border-slate-700/65 bg-[#0b1822]/68 p-4">
 
-      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
         {label}
       </p>
 
@@ -1294,7 +1340,7 @@ function HistoricalMetric({
 
         <div>
 
-          <p className="text-[9px] uppercase tracking-wider text-slate-600">
+          <p className="text-[9px] uppercase tracking-wider text-slate-500">
             Current
           </p>
 
@@ -1306,7 +1352,7 @@ function HistoricalMetric({
 
         <div className="text-right">
 
-          <p className="text-[9px] uppercase tracking-wider text-slate-600">
+          <p className="text-[9px] uppercase tracking-wider text-slate-500">
             Baseline
           </p>
 
@@ -1320,7 +1366,7 @@ function HistoricalMetric({
 
       <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3">
 
-        <span className="text-[10px] text-slate-600">
+        <span className="text-[10px] text-slate-500">
           Difference
         </span>
 
@@ -1370,7 +1416,7 @@ function VulnerabilityPanel({
 
           <div>
 
-            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Most Vulnerable Persona
             </p>
 
@@ -1387,7 +1433,7 @@ function VulnerabilityPanel({
 
             <div>
 
-              <p className="text-[9px] uppercase tracking-[0.16em] text-slate-600">
+              <p className="text-[9px] uppercase tracking-[0.16em] text-slate-500">
                 Base Risk
               </p>
 
@@ -1402,7 +1448,7 @@ function VulnerabilityPanel({
 
             <div>
 
-              <p className="text-[9px] uppercase tracking-[0.16em] text-slate-600">
+              <p className="text-[9px] uppercase tracking-[0.16em] text-slate-500">
                 Base Level
               </p>
 
@@ -1438,9 +1484,9 @@ function VulnerabilityPanel({
 
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
+      <div className="heatshield-detail-card heatshield-detail-card--soft mt-4 rounded-xl border border-slate-700/55 bg-slate-900/40 px-4 py-3">
 
-        <p className="text-[10px] leading-5 text-slate-600">
+        <p className="text-[12px] leading-5 text-slate-500">
           Persona vulnerability scores
           are heuristic decision-support
           estimates. They are not
@@ -1461,7 +1507,7 @@ function PersonaCard({
   persona: PersonaRisk;
 }) {
   return (
-    <article className="rounded-xl border border-slate-800/70 bg-[#081018]/45 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-slate-700">
+    <article className="heatshield-detail-card rounded-xl border border-slate-700/65 bg-[#0b1822]/68 p-4">
 
       <div className="flex items-start justify-between gap-3">
 
@@ -1473,7 +1519,7 @@ function PersonaCard({
             }
           </p>
 
-          <p className="mt-1 text-[9px] uppercase tracking-[0.16em] text-slate-600">
+          <p className="mt-1 text-[9px] uppercase tracking-[0.16em] text-slate-500">
             Sensitivity ×
             {persona.sensitivity_multiplier.toFixed(
               2,
@@ -1498,7 +1544,7 @@ function PersonaCard({
           }
         </span>
 
-        <span className="pb-1 text-[10px] uppercase tracking-[0.14em] text-slate-600">
+        <span className="pb-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">
           / 100
         </span>
 
@@ -1522,11 +1568,11 @@ function PersonaCard({
 
       <div className="mt-4 border-t border-slate-800/70 pt-4">
 
-        <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
           Why this group is vulnerable
         </p>
 
-        <p className="mt-2 text-[11px] leading-5 text-slate-400">
+        <p className="mt-2 text-[12px] leading-5 text-slate-400">
           {
             persona.primary_reason
           }
@@ -1534,13 +1580,13 @@ function PersonaCard({
 
       </div>
 
-      <div className="mt-4 rounded-lg border border-sky-400/10 bg-sky-400/[0.025] p-3">
+      <div className="heatshield-detail-card mt-4 rounded-lg border border-sky-400/15 bg-sky-400/[0.045] p-3">
 
-        <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-sky-300/70">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300/70">
           Recommended Action
         </p>
 
-        <p className="mt-2 text-[11px] leading-5 text-slate-400">
+        <p className="mt-2 text-[12px] leading-5 text-slate-400">
           {
             persona.recommended_action
           }
@@ -1567,7 +1613,7 @@ function RiskBadge({
     "CRITICAL"
   ) {
     return (
-      <span className="rounded-full border border-rose-400/25 bg-rose-400/[0.09] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-rose-300">
+      <span className="rounded-full border border-rose-400/25 bg-rose-400/[0.09] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-rose-300">
         Critical
       </span>
     );
@@ -1578,7 +1624,7 @@ function RiskBadge({
     "VERY HIGH"
   ) {
     return (
-      <span className="rounded-full border border-orange-400/20 bg-orange-400/[0.08] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-orange-300">
+      <span className="rounded-full border border-orange-400/20 bg-orange-400/[0.08] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-orange-300">
         Very High
       </span>
     );
@@ -1589,7 +1635,7 @@ function RiskBadge({
     "HIGH"
   ) {
     return (
-      <span className="rounded-full border border-amber-400/20 bg-amber-400/[0.08] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-amber-300">
+      <span className="rounded-full border border-amber-400/20 bg-amber-400/[0.08] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-300">
         High
       </span>
     );
@@ -1600,14 +1646,14 @@ function RiskBadge({
     "MODERATE"
   ) {
     return (
-      <span className="rounded-full border border-yellow-400/20 bg-yellow-400/[0.08] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-yellow-300">
+      <span className="rounded-full border border-yellow-400/20 bg-yellow-400/[0.08] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-yellow-300">
         Moderate
       </span>
     );
   }
 
   return (
-    <span className="rounded-full border border-emerald-400/20 bg-emerald-400/[0.08] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-emerald-300">
+    <span className="rounded-full border border-emerald-400/20 bg-emerald-400/[0.08] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-300">
       Low
     </span>
   );
@@ -1663,7 +1709,7 @@ function ForecastPanel({
               key={
                 point.hours_ahead
               }
-              className="rounded-xl border border-slate-800/70 bg-[#081018]/45 px-4 py-3.5"
+              className="heatshield-detail-card rounded-xl border border-slate-700/65 bg-[#0b1822]/68 px-4 py-3.5"
             >
 
               <div className="flex items-center gap-4">
@@ -1677,7 +1723,7 @@ function ForecastPanel({
                       : `+${point.hours_ahead} hr`}
                   </p>
 
-                  <p className="mt-0.5 text-[11px] text-slate-600">
+                  <p className="mt-0.5 text-[11px] text-slate-500">
                     {
                       point.temperature
                     }
@@ -1728,9 +1774,9 @@ function ForecastPanel({
 
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
+      <div className="heatshield-detail-card heatshield-detail-card--soft mt-4 rounded-xl border border-slate-700/55 bg-slate-900/40 px-4 py-3">
 
-        <p className="text-[10px] leading-5 text-slate-600">
+        <p className="text-[12px] leading-5 text-slate-500">
           {mode === "LIVE" || mode === "CACHED_LIVE"
             ? "Future temperature points shown here come from cached FortyGuard forecast heatmaps for +3/+6/+9/+12 hours. Open-Meteo supplies environmental forecast-model context aligned to each hour, and AI HeatShield recalculates the risk score from the nearest future heat cell. Risk scores are AI HeatShield outputs, not FortyGuard risk predictions."
             : "Future forecast points are unavailable until a successful FortyGuard refresh. The current point remains available from the active dashboard dataset."}
@@ -1763,7 +1809,7 @@ function DecisionPanel({
           .map((item) => (
             <article
               key={`${item.priority}-${item.title}`}
-              className="rounded-xl border border-slate-800/70 bg-[#081018]/45 p-4 transition hover:border-slate-700"
+              className="heatshield-detail-card rounded-xl border border-slate-700/65 bg-[#0b1822]/68 p-4"
             >
 
               <div className="flex gap-3.5">
@@ -1792,14 +1838,14 @@ function DecisionPanel({
 
                   </div>
 
-                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                  <p className="mt-2 text-[13px] leading-6 text-slate-300/80">
                     {
                       item.action
                     }
                   </p>
 
                   {item.reason && (
-                    <p className="mt-2 text-[10px] leading-4 text-slate-600">
+                    <p className="mt-2 text-[10px] leading-4 text-slate-500">
                       Why:{" "}
                       {
                         item.reason
@@ -1857,7 +1903,7 @@ function HotspotPanel({
                     hotspot.tile_id,
                   )
                 }
-                className={`w-full rounded-xl border p-3.5 text-left transition ${
+                className={`heatshield-detail-card w-full rounded-xl border p-3.5 text-left ${
                   selected
                     ? "border-sky-400/25 bg-sky-400/[0.06]"
                     : "border-slate-800/70 bg-[#081018]/45 hover:border-slate-700"
@@ -1883,7 +1929,7 @@ function HotspotPanel({
                         }
                       </p>
 
-                      <p className="mt-0.5 text-[11px] text-slate-600">
+                      <p className="mt-0.5 text-[11px] text-slate-500">
                         {
                           hotspot.temperature
                         }
@@ -1966,13 +2012,13 @@ function RiskDriverPanel({
 
               <div className="mb-1.5 flex justify-between gap-3">
 
-                <span className="text-xs text-slate-400">
+                <span className="text-[13px] text-slate-300/80">
                   {
                     factor.name
                   }
                 </span>
 
-                <span className="text-xs font-medium text-slate-300">
+                <span className="text-[13px] font-semibold text-slate-100">
                   {factor.contribution.toFixed(
                     1,
                   )}
@@ -2002,8 +2048,8 @@ function RiskDriverPanel({
       </div>
 
       {(mode === "LIVE" || mode === "CACHED_LIVE") && (
-        <div className="mt-4 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
-          <p className="text-[10px] leading-5 text-slate-600">
+        <div className="heatshield-detail-card heatshield-detail-card--soft mt-4 rounded-xl border border-slate-700/55 bg-slate-900/40 px-4 py-3">
+          <p className="text-[12px] leading-5 text-slate-500">
             Driver contributions use FortyGuard hyperlocal temperature,
             Open-Meteo contextual humidity/wet-bulb/solar inputs, and a
             calculated heat index. They are explainable model contributions,
@@ -2095,7 +2141,7 @@ function ClimateSummary({
 
       {(mode === "LIVE" || mode === "CACHED_LIVE") && (
         <div className="mt-4 rounded-xl border border-sky-400/10 bg-sky-400/[0.025] px-4 py-3">
-          <p className="text-[10px] leading-5 text-slate-600">
+          <p className="text-[12px] leading-5 text-slate-500">
             FortyGuard provides the spatial temperature field. Open-Meteo
             provides aligned area-level environmental context; those contextual
             variables should not be interpreted as 100 m FortyGuard
@@ -2128,7 +2174,7 @@ function InterventionSimulator({
               key={
                 item.name
               }
-              className="rounded-xl border border-slate-800/70 bg-[#081018]/45 p-4 transition duration-200 hover:border-slate-700"
+              className="heatshield-detail-card rounded-xl border border-slate-700/65 bg-[#0b1822]/68 p-4"
             >
 
               <p className="min-h-10 text-sm font-medium text-slate-200">
@@ -2137,7 +2183,7 @@ function InterventionSimulator({
 
               <div className="mt-4 flex items-end gap-2">
 
-                <span className="text-xl font-medium text-slate-600 line-through">
+                <span className="text-xl font-medium text-slate-500 line-through">
                   {
                     item.before_score
                   }
@@ -2159,7 +2205,7 @@ function InterventionSimulator({
 
                 <div className="flex items-center justify-between">
 
-                  <span className="text-[11px] text-slate-600">
+                  <span className="text-[11px] text-slate-500">
                     Risk reduction
                   </span>
 
@@ -2190,7 +2236,7 @@ function InterventionSimulator({
 
                 </div>
 
-                <p className="mt-2 text-[10px] text-slate-600">
+                <p className="mt-2 text-[10px] text-slate-500">
                   −
                   {
                     item.reduction_points
@@ -2206,9 +2252,9 @@ function InterventionSimulator({
 
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-800/60 bg-slate-900/30 px-4 py-3">
+      <div className="heatshield-detail-card heatshield-detail-card--soft mt-4 rounded-xl border border-slate-700/55 bg-slate-900/40 px-4 py-3">
 
-        <p className="text-[10px] leading-5 text-slate-600">
+        <p className="text-[12px] leading-5 text-slate-500">
           Intervention outcomes are
           scenario-based
           decision-support estimates
@@ -2219,6 +2265,198 @@ function InterventionSimulator({
       </div>
 
     </Panel>
+  );
+}
+
+
+function DashboardMotionStyles() {
+  return (
+    <style jsx global>{`
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: #050b11;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .heatshield-reveal {
+        opacity: 0.22;
+        transform: translateY(46px) scale(0.975);
+        filter: blur(4px);
+        transition:
+          opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+          transform 560ms cubic-bezier(0.16, 1, 0.3, 1),
+          filter 440ms ease-out;
+      }
+
+      .heatshield-reveal[data-visible="true"] {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+
+      .heatshield-interactive-card {
+        position: relative;
+        transform: translateZ(0) scale(1);
+        transition:
+          transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+          border-color 220ms ease,
+          background-color 220ms ease,
+          box-shadow 220ms ease,
+          filter 220ms ease;
+        will-change: transform;
+      }
+
+      .heatshield-interactive-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border-radius: inherit;
+        opacity: 0;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(125, 211, 252, 0.10), transparent 42%),
+          linear-gradient(135deg, rgba(255,255,255,0.035), transparent 38%);
+        transition: opacity 420ms ease;
+      }
+
+      .heatshield-interactive-card:hover,
+      .heatshield-interactive-card:focus-within {
+        z-index: 20;
+        transform: translateY(-9px) scale(1.026);
+        border-color: rgba(125, 211, 252, 0.30);
+        background-color: rgba(16, 33, 45, 0.96);
+        box-shadow:
+          0 30px 90px rgba(0, 0, 0, 0.34),
+          0 0 0 1px rgba(125, 211, 252, 0.05),
+          0 0 42px rgba(14, 165, 233, 0.07);
+        filter: brightness(1.06);
+      }
+
+      .heatshield-interactive-card:hover::after,
+      .heatshield-interactive-card:focus-within::after {
+        opacity: 1;
+      }
+
+      .heatshield-detail-card {
+        position: relative;
+        transform: translateZ(0) scale(1);
+        transition:
+          transform 170ms cubic-bezier(0.16, 1, 0.3, 1),
+          border-color 170ms ease,
+          background-color 170ms ease,
+          box-shadow 170ms ease,
+          filter 170ms ease;
+        will-change: transform;
+      }
+
+      .heatshield-detail-card:hover,
+      .heatshield-detail-card:focus-within {
+        z-index: 30;
+        transform: translateY(-5px) scale(1.04);
+        border-color: rgba(125, 211, 252, 0.32);
+        background-color: rgba(14, 31, 42, 0.96);
+        box-shadow:
+          0 18px 44px rgba(0, 0, 0, 0.30),
+          0 0 0 1px rgba(125, 211, 252, 0.05),
+          0 0 26px rgba(56, 189, 248, 0.08);
+        filter: brightness(1.08);
+      }
+
+      .heatshield-detail-card--soft:hover,
+      .heatshield-detail-card--soft:focus-within {
+        transform: translateY(-2px) scale(1.012);
+      }
+
+      .heatshield-chart-bar {
+        transform-origin: bottom;
+        animation: heatshieldBarGlow 5s ease-in-out infinite;
+      }
+
+      @keyframes heatshieldBarGlow {
+        0%, 100% {
+          filter: saturate(0.95) brightness(0.95);
+          box-shadow: 0 0 18px rgba(251, 113, 133, 0.08);
+        }
+        50% {
+          filter: saturate(1.15) brightness(1.08);
+          box-shadow: 0 0 30px rgba(251, 146, 60, 0.18);
+        }
+      }
+
+      @media (hover: none), (pointer: coarse) {
+        .heatshield-interactive-card:hover,
+        .heatshield-detail-card:hover {
+          transform: none;
+          filter: none;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        .heatshield-reveal,
+        .heatshield-reveal[data-visible="true"] {
+          opacity: 1;
+          transform: none;
+          filter: none;
+          transition: none;
+        }
+
+        .heatshield-chart-bar {
+          animation: none;
+        }
+
+        .heatshield-interactive-card,
+        .heatshield-interactive-card:hover,
+        .heatshield-interactive-card:focus-within,
+        .heatshield-detail-card,
+        .heatshield-detail-card:hover,
+        .heatshield-detail-card:focus-within {
+          transform: none;
+          transition: none;
+        }
+      }
+    `}</style>
+  );
+}
+
+function AmbientBackground() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.11),transparent_30%),radial-gradient(circle_at_85%_15%,rgba(251,191,36,0.075),transparent_24%),linear-gradient(180deg,#0a1721_0%,#07121a_48%,#08151d_100%)]" />
+
+      <div
+        className="absolute inset-0 opacity-[0.14]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px)",
+          backgroundSize: "52px 52px",
+          maskImage:
+            "linear-gradient(to bottom, black, transparent 82%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black, transparent 82%)",
+        }}
+      />
+
+      <div className="absolute left-[-8rem] top-[12%] h-[28rem] w-[28rem] animate-[pulse_12s_ease-in-out_infinite] rounded-full bg-sky-500/[0.055] blur-[80px]" />
+      <div className="absolute right-[-10rem] top-[34%] h-[30rem] w-[30rem] animate-[pulse_13s_ease-in-out_infinite] rounded-full bg-amber-400/[0.045] blur-[90px]" />
+      <div className="absolute bottom-[-12rem] left-[35%] h-[32rem] w-[32rem] animate-[pulse_12s_ease-in-out_infinite] rounded-full bg-emerald-400/[0.035] blur-[95px]" />
+      <div className="absolute left-1/2 top-[28%] h-[38rem] w-[38rem] -translate-x-1/2 animate-[pulse_11s_ease-in-out_infinite] rounded-full bg-sky-300/[0.025] blur-[105px]" />
+
+
+      <div className="absolute left-[8%] top-[18%] h-1 w-1 animate-pulse rounded-full bg-sky-300/50 shadow-[0_0_18px_rgba(125,211,252,0.7)]" />
+      <div className="absolute right-[13%] top-[27%] h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300/40 shadow-[0_0_20px_rgba(252,211,77,0.6)] [animation-delay:1.4s]" />
+      <div className="absolute bottom-[22%] left-[18%] h-1 w-1 animate-pulse rounded-full bg-emerald-300/40 shadow-[0_0_18px_rgba(110,231,183,0.6)] [animation-delay:2.2s]" />
+    </div>
   );
 }
 
@@ -2234,17 +2472,18 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-800/70 bg-[#0c1620]/75 p-5 backdrop-blur-lg">
+    <section className="heatshield-interactive-card group relative overflow-hidden rounded-2xl border border-slate-600/55 bg-gradient-to-br from-[#10212d]/92 via-[#0c1923]/88 to-[#09151e]/84 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/20 to-transparent opacity-70" />
 
-      <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-sky-300/70">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-300/70">
         {eyebrow}
       </p>
 
-      <h3 className="mt-1.5 text-base font-semibold tracking-[-0.02em] text-slate-100">
+      <h3 className="mt-1.5 text-[17px] font-semibold tracking-[-0.025em] text-slate-50">
         {title}
       </h3>
 
-      <p className="mt-1.5 max-w-2xl text-xs leading-5 text-slate-500">
+      <p className="mt-1.5 max-w-2xl text-[12px] leading-5 text-slate-300/80">
         {subtitle}
       </p>
 
@@ -2262,9 +2501,9 @@ function HeaderInfo({
   value: string;
 }) {
   return (
-    <div className="min-w-[100px] rounded-xl border border-slate-800/70 bg-[#081018]/55 px-3 py-2">
+    <div className="min-w-[100px] rounded-xl border border-slate-800/70 bg-[#07111a]/65 px-3 py-2 shadow-inner shadow-white/[0.015] transition duration-200 hover:border-slate-700 hover:bg-[#0b1721]/80">
 
-      <p className="text-[8px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
         {label}
       </p>
 
@@ -2284,9 +2523,9 @@ function MiniInfo({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800/60 bg-[#081018]/45 px-3 py-3">
+    <div className="heatshield-detail-card rounded-xl border border-slate-700/60 bg-[#0b1822]/65 px-3 py-3 shadow-inner shadow-white/[0.015]">
 
-      <p className="text-[8px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
         {label}
       </p>
 
@@ -2306,13 +2545,13 @@ function SummaryRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-800/60 bg-[#081018]/40 px-3.5 py-3">
+    <div className="heatshield-detail-card flex items-center justify-between gap-4 rounded-xl border border-slate-700/60 bg-[#0b1822]/60 px-3.5 py-3">
 
-      <span className="text-xs text-slate-500">
+      <span className="text-[13px] text-slate-300/75">
         {label}
       </span>
 
-      <span className="text-xs font-medium text-slate-300">
+      <span className="text-[13px] font-semibold text-slate-100">
         {value}
       </span>
 
@@ -2332,7 +2571,7 @@ function LoadingScreen() {
           AI HeatShield
         </p>
 
-        <p className="mt-1 text-xs text-slate-600">
+        <p className="mt-1 text-[13px] text-slate-300/75">
           Loading climate
           intelligence...
         </p>
@@ -2361,11 +2600,11 @@ function ErrorScreen({
           Backend unavailable
         </h2>
 
-        <p className="mt-2 text-xs leading-5 text-slate-500">
+        <p className="mt-2 text-[13px] leading-6 text-slate-300/80">
           {message}
         </p>
 
-        <p className="mt-3 break-all text-[10px] text-slate-600">
+        <p className="mt-3 break-all text-[10px] text-slate-500">
           API:{" "}
           {API_BASE_URL}
         </p>
