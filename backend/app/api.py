@@ -40,15 +40,11 @@ async def analyze(
     if not heatmap.tiles:
         raise RuntimeError("No heatmap tiles are available for analysis.")
 
-    # Calculate risk once for every tile and reuse the result throughout the
-    # response. This avoids repeated risk calculations for map/hotspot logic.
     risk_by_tile = {
         tile.id: risk_service.calculate_risk(tile)
         for tile in heatmap.tiles
     }
 
-    # Use the requested tile when valid. Otherwise default to the highest-risk
-    # tile so the dashboard always has a meaningful selected zone.
     selected_tile = None
 
     if tile_id:
@@ -69,8 +65,6 @@ async def analyze(
 
     selected_risk = risk_by_tile[selected_tile.id]
 
-    # All services below are local/cached computations. They do not create a
-    # new FortyGuard job from this endpoint.
     recommendation_result = recommendation_service.generate(
         selected_tile
     )
@@ -93,8 +87,6 @@ async def analyze(
         reverse=True,
     )
 
-    # HotspotResult requires the explainable factor list as part of its
-    # Pydantic schema. Reuse the already-calculated risk factors here.
     hotspots = [
         HotspotResult(
             rank=index,
@@ -167,12 +159,35 @@ async def refresh(
     force: bool = Query(default=False),
 ) -> dict:
     """
-    Explicit slow refresh endpoint.
+    Refresh only the current FortyGuard heatmap.
 
-    The dashboard can remain visible while the browser waits for this request.
-    FortyGuardService internally deduplicates simultaneous refresh attempts.
+    Forecast generation is intentionally handled by /refresh-forecasts so the
+    production deployment does not depend on detached asyncio background tasks.
     """
     result = await fortyguard_service.refresh_all(
+        force=force
+    )
+
+    return {
+        **result,
+        "needs_refresh": fortyguard_service.needs_refresh(),
+        "forecast_status": fortyguard_service.get_forecast_status(),
+        "data_generated_at": fortyguard_service.get_data_generated_at(),
+    }
+
+
+@router.post("/refresh-forecasts")
+async def refresh_forecasts(
+    force: bool = Query(default=False),
+) -> dict:
+    """
+    Explicitly refresh +3h/+6h/+9h/+12h FortyGuard forecast heatmaps.
+
+    This request stays alive until the forecast batch completes. That makes the
+    flow reliable on production/serverless-style deployments where detached
+    asyncio tasks may be cancelled after the original request finishes.
+    """
+    result = await fortyguard_service.refresh_forecasts(
         force=force
     )
 

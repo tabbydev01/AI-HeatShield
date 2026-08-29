@@ -62,8 +62,9 @@ class FortyGuardService:
         self._forecast_saved_at_utc: datetime | None = None
 
         self._refresh_lock = asyncio.Lock()
+        self._forecast_refresh_lock = asyncio.Lock()
         self._is_refreshing = False
-        self._forecast_refresh_task: asyncio.Task[None] | None = None
+        self._is_forecast_refreshing = False
 
         backend_root = Path(__file__).resolve().parents[2]
         self.demo_file = backend_root / "demo_data" / "phoenix_heatmap.json"
@@ -151,10 +152,13 @@ class FortyGuardService:
 
     async def refresh_all(self, force: bool = False) -> dict[str, Any]:
         """
-        Refresh CURRENT data on the request path, then refresh forecasts
-        independently. The caller no longer waits for +3/+6/+9/+12 jobs.
+        Refresh only the CURRENT FortyGuard heatmap on the request path.
 
-        Existing forecast data stays visible until a new batch is ready.
+        Forecast generation is intentionally separated into
+        ``refresh_forecasts`` so production deployments do not depend on an
+        orphaned ``asyncio.create_task`` surviving after an HTTP response ends.
+        Existing forecast data remains available until an explicit forecast
+        refresh successfully replaces it.
         """
         if self.demo_mode:
             demo = self._load_demo_heatmap()
@@ -169,9 +173,6 @@ class FortyGuardService:
             }
 
         if not force and self._current_cache_is_fresh():
-            if not self._forecast_cache_is_usable():
-                self._start_forecast_refresh(self._current_nyc_hour())
-
             return {
                 "ok": True,
                 "mode": self.get_source(),
@@ -182,10 +183,9 @@ class FortyGuardService:
             }
 
         async with self._refresh_lock:
+            # Another request may have refreshed current data while this caller
+            # was waiting for the lock.
             if not force and self._current_cache_is_fresh():
-                if not self._forecast_cache_is_usable():
-                    self._start_forecast_refresh(self._current_nyc_hour())
-
                 return {
                     "ok": True,
                     "mode": self.get_source(),
@@ -196,6 +196,7 @@ class FortyGuardService:
                 }
 
             self._is_refreshing = True
+            weather_task: asyncio.Task[dict[datetime, dict[str, Any]]] | None = None
 
             try:
                 base_time = self._current_nyc_hour()
@@ -240,9 +241,6 @@ class FortyGuardService:
                 self.last_error = None
                 self._persist_cache_safely()
 
-                # Forecasts are no longer part of the response critical path.
-                self._start_forecast_refresh(base_time)
-
                 return {
                     "ok": True,
                     "mode": "LIVE",
@@ -280,127 +278,171 @@ class FortyGuardService:
                 }
 
             finally:
+                if weather_task is not None and not weather_task.done():
+                    weather_task.cancel()
+                    try:
+                        await weather_task
+                    except (asyncio.CancelledError, Exception):
+                        pass
+
                 self._is_refreshing = False
 
-    def _start_forecast_refresh(self, base_time: datetime) -> None:
-        """Start one forecast batch only; repeated clicks never duplicate it."""
-        if (
-            self._forecast_refresh_task is not None
-            and not self._forecast_refresh_task.done()
-        ):
-            return
-
-        task = asyncio.create_task(
-            self._refresh_forecasts_background(base_time)
-        )
-        self._forecast_refresh_task = task
-        task.add_done_callback(self._forecast_refresh_finished)
-
-    def _forecast_refresh_finished(
-        self,
-        task: asyncio.Task[None],
-    ) -> None:
-        """Consume task errors and release the strong task reference."""
-        try:
-            task.result()
-        except asyncio.CancelledError:
-            pass
-        except Exception as exc:
-            print(
-                "[AI HeatShield] Background forecast refresh failed. "
-                f"Keeping previous forecast cache. Error: {exc}"
-            )
-        finally:
-            if self._forecast_refresh_task is task:
-                self._forecast_refresh_task = None
-
-    async def _refresh_forecasts_background(
-        self,
-        base_time: datetime,
-    ) -> None:
+    async def refresh_forecasts(self, force: bool = False) -> dict[str, Any]:
         """
-        Build +3/+6/+9/+12 in the background.
+        Explicitly refresh +3/+6/+9/+12 FortyGuard forecast heatmaps.
 
-        The previous forecast generation remains active until this batch has
-        finished, so the UI never sees a half-updated generation.
+        This coroutine is designed to be awaited by an HTTP endpoint. Keeping
+        the request alive until the forecast batch finishes is production-safe
+        on serverless/container platforms that may cancel detached background
+        tasks after the originating request returns.
+
+        A previous forecast generation remains active until at least one new
+        horizon has completed successfully. Total upstream failure therefore
+        never destroys a known-good forecast cache.
         """
-        target_by_horizon = {
-            hours: base_time + timedelta(hours=hours)
-            for hours in self.FORECAST_HORIZONS
-        }
+        if self.demo_mode:
+            return {
+                "ok": True,
+                "mode": "DEMO",
+                "refreshed": False,
+                "forecast_horizons": [],
+            }
 
-        weather_task = asyncio.create_task(
-            weather_service.get_environmental_batch(
-                target_by_horizon.values(),
-                latitude=40.712336,
-                longitude=-74.010329,
-                force_refresh=False,
-            )
-        )
+        if not force and self._forecast_cache_is_usable():
+            return {
+                "ok": True,
+                "mode": self.get_source(),
+                "refreshed": False,
+                "forecast_horizons": sorted(
+                    self.get_cached_forecast_heatmaps()
+                ),
+            }
 
-        timeout = httpx.Timeout(
-            connect=20.0,
-            read=60.0,
-            write=30.0,
-            pool=30.0,
-        )
-        limits = httpx.Limits(
-            max_connections=8,
-            max_keepalive_connections=4,
-            keepalive_expiry=30.0,
-        )
-
-        try:
-            async with httpx.AsyncClient(
-                timeout=timeout,
-                limits=limits,
-            ) as client:
-                submissions = await self._submit_refresh_jobs(
-                    client=client,
-                    target_by_horizon=target_by_horizon,
-                )
-
-                result_tasks = {
-                    hours: asyncio.create_task(
-                        self._resolve_submitted_job(
-                            client=client,
-                            submission=submission,
-                        )
-                    )
-                    for hours, submission in submissions.items()
+        async with self._forecast_refresh_lock:
+            # Deduplicate callers that arrived while another forecast request
+            # was already running.
+            if not force and self._forecast_cache_is_usable():
+                return {
+                    "ok": True,
+                    "mode": self.get_source(),
+                    "refreshed": False,
+                    "forecast_horizons": sorted(
+                        self.get_cached_forecast_heatmaps()
+                    ),
                 }
 
-                environmental_contexts = await self._safe_weather_result(
-                    weather_task
+            self._is_forecast_refreshing = True
+            weather_task: asyncio.Task[dict[datetime, dict[str, Any]]] | None = None
+
+            try:
+                base_time = self._current_nyc_hour()
+                target_by_horizon = {
+                    hours: base_time + timedelta(hours=hours)
+                    for hours in self.FORECAST_HORIZONS
+                }
+
+                weather_task = asyncio.create_task(
+                    weather_service.get_environmental_batch(
+                        target_by_horizon.values(),
+                        latitude=40.712336,
+                        longitude=-74.010329,
+                        force_refresh=False,
+                    )
                 )
 
-                forecast_results = await self._collect_forecast_results(
-                    result_tasks=result_tasks,
-                    target_by_horizon=target_by_horizon,
-                    environmental_contexts=environmental_contexts,
+                timeout = httpx.Timeout(
+                    connect=20.0,
+                    read=60.0,
+                    write=30.0,
+                    pool=30.0,
+                )
+                limits = httpx.Limits(
+                    max_connections=8,
+                    max_keepalive_connections=4,
+                    keepalive_expiry=30.0,
                 )
 
-            # Never destroy a good previous generation because of a total
-            # upstream forecast failure.
-            if not forecast_results:
-                print(
-                    "[AI HeatShield] No new forecast horizons completed; "
-                    "keeping previous forecast cache."
-                )
-                return
+                async with httpx.AsyncClient(
+                    timeout=timeout,
+                    limits=limits,
+                ) as client:
+                    submissions = await self._submit_refresh_jobs(
+                        client=client,
+                        target_by_horizon=target_by_horizon,
+                    )
 
-            self._forecast_cache = forecast_results
-            self._forecast_base_time = base_time
-            self._forecast_saved_at_utc = datetime.now(timezone.utc)
-            self._persist_cache_safely()
+                    result_tasks = {
+                        hours: asyncio.create_task(
+                            self._resolve_submitted_job(
+                                client=client,
+                                submission=submission,
+                            )
+                        )
+                        for hours, submission in submissions.items()
+                    }
 
-        finally:
-            if not weather_task.done():
-                weather_task.cancel()
-                try:
-                    await weather_task
-                except (asyncio.CancelledError, Exception):
-                    pass
+                    environmental_contexts = await self._safe_weather_result(
+                        weather_task
+                    )
+
+                    forecast_results = await self._collect_forecast_results(
+                        result_tasks=result_tasks,
+                        target_by_horizon=target_by_horizon,
+                        environmental_contexts=environmental_contexts,
+                    )
+
+                if not forecast_results:
+                    message = (
+                        "No new FortyGuard forecast horizons completed; "
+                        "keeping previous forecast cache."
+                    )
+                    self.last_error = message
+                    return {
+                        "ok": False,
+                        "mode": self.get_source(),
+                        "refreshed": False,
+                        "error": message,
+                        "forecast_horizons": sorted(
+                            self.get_cached_forecast_heatmaps()
+                        ),
+                    }
+
+                # Atomic generation swap: the UI sees the old generation until
+                # this batch has finished, then receives the new set together.
+                self._forecast_cache = forecast_results
+                self._forecast_base_time = base_time
+                self._forecast_saved_at_utc = datetime.now(timezone.utc)
+                self.last_error = None
+                self._persist_cache_safely()
+
+                return {
+                    "ok": True,
+                    "mode": self.get_source(),
+                    "refreshed": True,
+                    "forecast_horizons": sorted(forecast_results),
+                }
+
+            except Exception as exc:
+                self.last_error = str(exc)
+                return {
+                    "ok": False,
+                    "mode": self.get_source(),
+                    "refreshed": False,
+                    "error": self.last_error,
+                    "forecast_horizons": sorted(
+                        self.get_cached_forecast_heatmaps()
+                    ),
+                }
+
+            finally:
+                if weather_task is not None and not weather_task.done():
+                    weather_task.cancel()
+                    try:
+                        await weather_task
+                    except (asyncio.CancelledError, Exception):
+                        pass
+
+                self._is_forecast_refreshing = False
 
     async def _submit_refresh_jobs(
         self,

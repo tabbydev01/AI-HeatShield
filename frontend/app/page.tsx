@@ -263,7 +263,7 @@ export default function Home() {
     setBackgroundRefreshing(true);
 
     try {
-      const response = await fetch(
+      const currentResponse = await fetch(
         `${API_BASE_URL}/api/refresh?force=${force ? "true" : "false"}`,
         {
           method: "POST",
@@ -271,9 +271,44 @@ export default function Home() {
         },
       );
 
-      if (!response.ok) {
+      if (!currentResponse.ok) {
         throw new Error(
-          `Refresh request failed with status ${response.status}.`,
+          `Current refresh request failed with status ${currentResponse.status}.`,
+        );
+      }
+
+      const currentAnalysis = await loadAnalysis(
+        tileId,
+        false,
+      );
+
+      if (!currentAnalysis) {
+        return;
+      }
+
+      const forecastStatus =
+        currentAnalysis.forecast_status
+          ?.trim()
+          .toUpperCase() || "UNAVAILABLE";
+
+      const forecastNeedsRefresh =
+        forecastStatus !== "READY";
+
+      if (!forecastNeedsRefresh) {
+        return;
+      }
+
+      const forecastResponse = await fetch(
+        `${API_BASE_URL}/api/refresh-forecasts?force=false`,
+        {
+          method: "POST",
+          cache: "no-store",
+        },
+      );
+
+      if (!forecastResponse.ok) {
+        throw new Error(
+          `Forecast refresh request failed with status ${forecastResponse.status}.`,
         );
       }
 
@@ -283,7 +318,7 @@ export default function Home() {
       );
     } catch (err) {
       console.error(
-        "AI HeatShield background refresh error:",
+        "AI HeatShield refresh error:",
         err,
       );
     } finally {
