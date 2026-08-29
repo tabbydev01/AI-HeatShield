@@ -103,8 +103,12 @@ class WeatherService:
         """
         Fetch environmental context for several target hours efficiently.
 
-        Requests are grouped by date, so current/+3/+6/+9/+12 normally require
-        only one or two Open-Meteo HTTP requests instead of five.
+        Requested hours are grouped by calendar date. Each date needs one
+        Open-Meteo request because the response already contains all 24 hourly
+        values. When a +12h outlook crosses midnight, the two date requests run
+        concurrently instead of serially.
+
+        Cache entries are still hour-specific so callers keep the same contract.
         """
         lat = latitude if latitude is not None else self.DEFAULT_LATITUDE
         lon = longitude if longitude is not None else self.DEFAULT_LONGITUDE
@@ -118,8 +122,12 @@ class WeatherService:
 
         for target in targets:
             target_date = target.strftime("%Y-%m-%d")
-            target_hour = target.hour
-            key = self._cache_key(lat, lon, target_date, target_hour)
+            key = self._cache_key(
+                lat,
+                lon,
+                target_date,
+                target.hour,
+            )
 
             if not force_refresh and self._cache_is_valid(key):
                 results[target] = self._cache[key]
@@ -130,27 +138,56 @@ class WeatherService:
             return results
 
         async with self._lock:
-            # Re-check after waiting for another in-flight weather refresh.
+            # Another refresh may have populated the cache while this caller
+            # waited for the lock.
             pending_by_date: dict[str, list[datetime]] = {}
+
             for target_date, date_targets in missing_by_date.items():
                 for target in date_targets:
-                    key = self._cache_key(lat, lon, target_date, target.hour)
+                    key = self._cache_key(
+                        lat,
+                        lon,
+                        target_date,
+                        target.hour,
+                    )
+
                     if not force_refresh and self._cache_is_valid(key):
                         results[target] = self._cache[key]
                     else:
-                        pending_by_date.setdefault(target_date, []).append(target)
+                        pending_by_date.setdefault(
+                            target_date,
+                            [],
+                        ).append(target)
 
             if not pending_by_date:
                 return results
 
-            timeout = httpx.Timeout(connect=10.0, read=30.0, write=10.0, pool=10.0)
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                for target_date, date_targets in pending_by_date.items():
-                    now_nyc = self._get_nyc_now().replace(
-                        minute=0,
-                        second=0,
-                        microsecond=0,
-                    )
+            now_nyc = self._get_nyc_now().replace(
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+            timeout = httpx.Timeout(
+                connect=10.0,
+                read=30.0,
+                write=10.0,
+                pool=10.0,
+            )
+            limits = httpx.Limits(
+                max_connections=4,
+                max_keepalive_connections=2,
+                keepalive_expiry=30.0,
+            )
+
+            async with httpx.AsyncClient(
+                timeout=timeout,
+                limits=limits,
+            ) as client:
+
+                async def fetch_date(
+                    target_date: str,
+                    date_targets: list[datetime],
+                ) -> tuple[str, list[datetime], dict[str, Any] | None]:
                     first_target = min(date_targets)
                     source_type = (
                         "historical_reanalysis"
@@ -170,10 +207,27 @@ class WeatherService:
                     )
 
                     try:
-                        payload = await self._request(client, base_url, params)
+                        payload = await self._request(
+                            client,
+                            base_url,
+                            params,
+                        )
+                        return target_date, date_targets, payload
                     except Exception as exc:
-                        self.last_error = f"Open-Meteo request failed: {exc}"
-                        # Keep partial cached results usable.
+                        self.last_error = (
+                            f"Open-Meteo request failed for {target_date}: {exc}"
+                        )
+                        return target_date, date_targets, None
+
+                date_payloads = await asyncio.gather(
+                    *(
+                        fetch_date(target_date, date_targets)
+                        for target_date, date_targets in pending_by_date.items()
+                    )
+                )
+
+                for target_date, date_targets, payload in date_payloads:
+                    if payload is None:
                         continue
 
                     for target in date_targets:
@@ -191,10 +245,17 @@ class WeatherService:
                                 ),
                             )
                         except Exception as exc:
-                            self.last_error = f"Open-Meteo processing failed: {exc}"
+                            self.last_error = (
+                                f"Open-Meteo processing failed: {exc}"
+                            )
                             continue
 
-                        key = self._cache_key(lat, lon, target_date, target.hour)
+                        key = self._cache_key(
+                            lat,
+                            lon,
+                            target_date,
+                            target.hour,
+                        )
                         self._cache[key] = value
                         self._cache_created_at[key] = time.monotonic()
                         results[target] = value
