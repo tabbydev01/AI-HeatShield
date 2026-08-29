@@ -8,6 +8,7 @@ from typing import Any
 import httpx
 
 from app.config import settings
+from app.services.weather_service import weather_service
 from app.schemas.heatmap import (
     HeatTile,
     HeatmapResponse,
@@ -273,8 +274,11 @@ class FortyGuardService:
                 if self._contains_heatmap_data(
                     submit_data
                 ):
+                    environmental_data = await self._get_environmental_context()
+
                     return self._normalize_live_response(
-                        submit_data
+                        submit_data,
+                        environmental_data=environmental_data,
                     )
 
                 raise RuntimeError(
@@ -288,9 +292,42 @@ class FortyGuardService:
                 activity_id=activity_id,
             )
 
+            environmental_data = await self._get_environmental_context()
+
             return self._normalize_live_response(
-                completed_data
+                completed_data,
+                environmental_data=environmental_data,
             )
+
+    async def _get_environmental_context(
+        self,
+    ) -> dict[str, Any]:
+        """
+        Fetch environmental context aligned with the deterministic
+        FortyGuard NYC historical request.
+
+        FortyGuard remains the source of every tile's hyperlocal
+        temperature. Open-Meteo supplies contextual humidity,
+        wet-bulb temperature and solar radiation for the same
+        location/date/hour.
+
+        If Open-Meteo is temporarily unavailable, FortyGuard data
+        still remains usable and the legacy placeholders are retained.
+        """
+
+        try:
+            return await weather_service.get_environmental_data(
+                latitude=40.712336,
+                longitude=-74.010329,
+                date="2024-07-15",
+                hour=14,
+            )
+        except Exception as exc:
+            print(
+                "[AI HeatShield] Open-Meteo environmental context "
+                f"unavailable. Continuing with FortyGuard only. Error: {exc}"
+            )
+            return {}
 
     async def _poll_activity(
         self,
@@ -456,6 +493,7 @@ class FortyGuardService:
     def _normalize_live_response(
         self,
         raw: dict[str, Any],
+        environmental_data: dict[str, Any] | None = None,
     ) -> HeatmapResponse:
         """
         Normalize FortyGuard async/status responses and GeoJSON
@@ -472,6 +510,18 @@ class FortyGuardService:
             )
 
         tiles: list[HeatTile] = []
+
+        environmental_data = environmental_data or {}
+
+        context_humidity = self._to_float(
+            environmental_data.get("humidity")
+        )
+        context_wet_bulb = self._to_float(
+            environmental_data.get("wet_bulb")
+        )
+        context_solar = self._to_float(
+            environmental_data.get("solar_radiation")
+        )
 
         for index, item in enumerate(map_data):
             if not isinstance(item, dict):
@@ -525,6 +575,26 @@ class FortyGuardService:
                     "solar",
                 ],
             )
+
+            # FortyGuard values take precedence whenever the API supplies
+            # them. Open-Meteo fills only variables missing from TCM.
+            if humidity is None:
+                humidity = context_humidity
+
+            if wet_bulb is None:
+                wet_bulb = context_wet_bulb
+
+            if solar is None:
+                solar = context_solar
+
+            # The current FortyGuard TCM response does not provide heat
+            # index. Calculate it from each hyperlocal FortyGuard
+            # temperature and the contextual relative humidity.
+            if heat_index is None and humidity is not None:
+                heat_index = self._calculate_heat_index_celsius(
+                    temperature_c=temperature,
+                    relative_humidity=humidity,
+                )
 
             tiles.append(
                 HeatTile(
@@ -989,6 +1059,90 @@ class FortyGuardService:
                     return parsed
 
         return None
+
+    @staticmethod
+    def _calculate_heat_index_celsius(
+        temperature_c: float,
+        relative_humidity: float,
+    ) -> float:
+        """
+        Calculate heat index using the NOAA/NWS Rothfusz regression.
+
+        The regression is principally intended for warm/humid
+        conditions. For conditions below its standard screening
+        threshold, return the air temperature rather than inventing
+        additional apparent heat stress.
+        """
+
+        temperature_f = (
+            temperature_c * 9.0 / 5.0
+        ) + 32.0
+
+        rh = max(
+            0.0,
+            min(float(relative_humidity), 100.0),
+        )
+
+        # Standard NWS screening: below roughly 80 F, heat index
+        # is effectively represented by air temperature.
+        if temperature_f < 80.0:
+            return round(temperature_c, 2)
+
+        heat_index_f = (
+            -42.379
+            + 2.04901523 * temperature_f
+            + 10.14333127 * rh
+            - 0.22475541 * temperature_f * rh
+            - 0.00683783 * temperature_f * temperature_f
+            - 0.05481717 * rh * rh
+            + 0.00122874
+            * temperature_f
+            * temperature_f
+            * rh
+            + 0.00085282
+            * temperature_f
+            * rh
+            * rh
+            - 0.00000199
+            * temperature_f
+            * temperature_f
+            * rh
+            * rh
+        )
+
+        # NWS low-humidity adjustment.
+        if (
+            rh < 13.0
+            and 80.0 <= temperature_f <= 112.0
+        ):
+            adjustment = (
+                (13.0 - rh) / 4.0
+            ) * (
+                (
+                    (17.0 - abs(temperature_f - 95.0))
+                    / 17.0
+                )
+                ** 0.5
+            )
+            heat_index_f -= adjustment
+
+        # NWS high-humidity adjustment.
+        elif (
+            rh > 85.0
+            and 80.0 <= temperature_f <= 87.0
+        ):
+            adjustment = (
+                (rh - 85.0) / 10.0
+            ) * (
+                (87.0 - temperature_f) / 5.0
+            )
+            heat_index_f += adjustment
+
+        heat_index_c = (
+            heat_index_f - 32.0
+        ) * 5.0 / 9.0
+
+        return round(heat_index_c, 2)
 
     def _first_number(
         self,
